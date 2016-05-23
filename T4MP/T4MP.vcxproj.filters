@@ -33,10 +33,19 @@
     <ClCompile Include="Debug.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
-    <ClCompile Include="Hook.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="T4MP.cpp">
+      <Filter>Source Files\Main-T4MP</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Weapon.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
   </ItemGroup>
@@ -52,6 +61,15 @@
     </ClInclude>
     <ClInclude Include="T4MP.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Weapon.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Source Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
