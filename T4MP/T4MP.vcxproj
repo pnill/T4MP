@@ -14,7 +14,7 @@
     <ProjectGuid>{42DC2297-F493-486D-813F-B89F382719E4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>T4MP</RootNamespace>
-    <WindowsTargetPlatformVersion>7</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <ProjectName>T4MP</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -106,6 +106,7 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="T4Engine.h" />
     <ClInclude Include="T4MP.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Weapon.h" />
