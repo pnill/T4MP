@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+message Packet{
+
+	 enum Type {
+	  client_connect = 0;
+	  server_snap = 1;
+	  client_snap = 2;
+	 };
+	 
+	Packet.Type type = 1;
+	PlayerSnap player_snapshot = 2;
+	ServerSnap server_snapshot = 3;
+};
+
+message PlayerSnap
+	{
+		float x = 1;
+		float y = 2;
+		float z = 3;
+		float viewx = 4;
+		float viewy = 5;
+		bool walkforward = 6;
+		bool walkbackward = 7;
+		bool walkleft = 8;
+		bool walkright = 9;
+		bool jump = 10;
+		bool crouch = 11;
+		bool fire = 12;
+		bool fire_hold = 13;
+		float fire_hold_time = 14;
+		bool fire_release = 15;
+		float fire_release_time = 16;
+		bool weaponswitch = 17;
+		float time_to_switch = 18;
+		int32 weaponslot = 19;
+	};
+
+
+
+
+	message ServerSnap
+	{
+		message PlayerData
+		{
+			message WeaponWheel
+			{	
+				bool bWarClub = 1;
+				
+				bool bBow1 = 2;
+				int32 bowNormalAmmo = 3;
+				int32 bowExplosiveAmmo = 4;
+				int32 bowPoisonAmmo = 5;
+				
+				bool bTekBow = 6;
+				int32 TekBowNormalAmmo = 7;
+				int32 TekBowExplosiveAmmo = 8;
+				int32 TekBowPosionAmmo = 9;
+				
+				bool bSpikeGrenade = 10;
+				int32 SpikeGrenadeAmmo = 11;
+				
+				bool bPistol = 12;
+				int32 PistolAmmo = 13;
+				
+				bool bShotGun = 14;
+				int32 ShotGunAmmo = 15;
+				
+				bool bFleechete = 16;
+				int32 FleecheteAmmo = 17;
+				int32 MiniGunAmmo = 18;
+				
+				bool bRocketLauncher = 19;
+				int32 RocketAmmo1 = 20;
+				int32 RocketAmmo2 = 21;
+				int32 RocketAmmo3 = 22;
+			
+				bool bPlasmaCannon = 23;
+				int32 PlasmaAmmo1 = 24;
+				int32 PlasmaAmmo2 = 25;
+				int32 PlasmaAmmo3 = 26;
+				
+				bool bFlameThrower = 27;
+				int32 FlameThrowerAmmo = 28;
+				
+				bool bSpiderMine = 29;
+				int32 SpiderMineAmmo = 30;
+				
+				bool bGravityGun = 31;
+				int32 GravityGunAmmo = 32;
+				int32 GravityGunAmmo2 = 33;
+				
+				bool bDarkMatter = 34;
+				int32 DarkMatterAmmo = 35;
+				
+				bool bCrossBow = 36;
+				int32 CrossBowNormalAmmow = 37;
+				int32 CrossBowExplosiveAmmow = 38;
+				int32 CrossBowPoisonAmmo = 39;
+			};
+			
+			float x = 1;
+			float y = 2;
+			float z = 3;
+			float viewx = 4;
+			float viewy = 5;
+			bool walkforward = 6;
+			bool walkbackward = 7;
+			bool walkleft = 8;
+			bool walkright = 9;
+			bool jump = 10;
+			bool crouch = 11;
+			bool fire = 12;
+			bool fire_hold = 13;
+			float fire_hold_time = 14;
+			bool fire_release = 15;
+			float fire_release_time = 16;
+			float maxhealth = 17;
+			float current_health = 18;
+			bool weaponswitch = 19;
+			float time_to_switch = 20;
+			int32 weaponslot = 21;
+			WeaponWheel weapons = 22;
+			
+		};
+
+		repeated PlayerData player = 1;
+	};

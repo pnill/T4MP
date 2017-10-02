@@ -1,6 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-#include "stdafx.h"
 #include "T4MP.h"
+#include <windows.h>
 
 __declspec(dllimport) void Injected();
 void Injected()

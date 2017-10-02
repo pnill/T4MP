@@ -1,9 +1,12 @@
-#include "stdafx.h"
+#define _WINSOCKAPI_ 
 #include "Engine.h"
 #include "Hook.h"
+#include "t4net.h"
 #include <windows.h>
 #include <stdio.h>
-#include "T4Engine.h"
+
+T4Network t4net;
+
 
 DWORD screen_effect_ret = 0x00000000; 
 __declspec(naked) void screen_effect_osd() // Fix crash when new player is taking damage, since we don't have a camera for them ecx here will be null we need to account for that.
@@ -23,14 +26,14 @@ __declspec(naked) void screen_effect_osd() // Fix crash when new player is takin
 		
 		mov eax,[esp+4]
 		test eax,eax
-		push screen_effect_ret
+		push screen_effect_ret //return normally
 		ret
 			
 
 		ret_null:
 			POPFD
 			POPAD
-			push 0x004EE815
+			push 0x004EE815 //return where I want instead
 			ret
 	}
 }
@@ -148,13 +151,10 @@ void __stdcall camera_hook3(void* thisptr, BlendedCamera* pCamera) // third came
 	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 	BlendedCamera* local_player = 0;
 
-	if (TurokEngine) // check each property make sure it's valid before trying to access it.
-	{
 		if (TurokEngine->pT4Game)
 			if (TurokEngine->pT4Game->pEngineObjects)
 				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
 					local_player = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0];
-	}
 
 	if (local_player != pCamera)
 		return;
@@ -170,14 +170,11 @@ int __stdcall death_message(void *thisptr)
 	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 	Player* localplayer = 0;
 
-	if (TurokEngine) // check each property make sure it's valid before trying to access it.
-	{
-		if (TurokEngine->pT4Game)
-			if (TurokEngine->pT4Game->pEngineObjects)
-				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
-					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
-						localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
-	}
+	if (TurokEngine->pT4Game)
+		if (TurokEngine->pT4Game->pEngineObjects)
+			if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
+				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
+					localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
 
 	if (localplayer != 0)
 	{
@@ -188,26 +185,23 @@ int __stdcall death_message(void *thisptr)
 	return pdeath_message_hook(thisptr);
 }
 
-typedef void(__stdcall *tinput_query)(void *thisptr,DWORD pInputPointer);
+typedef void(__stdcall *tinput_query)(void *thisptr, DWORD pInputPointer);
 tinput_query pinput_query;
 
 void __stdcall input_query(void *thisptr, DWORD pInputPointer)
-{	
+{
 	if (lPlayer != 0) // lPlayer populates in the camera function, once the camera is running we know the player is fully spawned and we can start to deal with input.
 	{
 		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 		Player* localplayer = 0;
 
 		//There's probably a better way to take care of this...
-		if (TurokEngine) // check each property make sure it's valid before trying to access it.
-		{
-			if (TurokEngine->pT4Game)
-				if (TurokEngine->pT4Game->pEngineObjects)
-					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
-						if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
-							localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
-		}
-	
+		if (TurokEngine->pT4Game)
+			if (TurokEngine->pT4Game->pEngineObjects)
+				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
+					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
+						localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
+
 		if (localplayer != 0)
 		{
 			if (localplayer != (Player*)pInputPointer)
@@ -217,97 +211,83 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 		}
 	}
 
-	return pinput_query(thisptr, pInputPointer);
-}
+	pinput_query(thisptr, pInputPointer);
 
-typedef int(__stdcall *tactor_spawn_1)(void* thisptr);
-tactor_spawn_1 pactor_spawn_1;
+	t4net.ProcessMessage();
 
-int __stdcall actor_spawn_1(void* thisptr)
-{
-	if ((DWORD)thisptr != lPlayer && lPlayer != 0)
-		return 0;
-
-	return pactor_spawn_1(thisptr);
-}
-
-typedef int(__stdcall *tconstruct_player_weapon)(void *thisptr);
-tconstruct_player_weapon pconstruct_player_weapon;
-
-int __stdcall construct_player_weapon(void* thisptr)
-{
-
-	printf("construct_player_weapon: %08X\r\n", thisptr);
-	if (thisptr == (void*)nPlayerPTR)
+	if (t4net.server)
 	{
-		printf("Matched new player, aborting weapon construction.\r\n");
-		return 0;
+		t4net.SendSnapShot();
 	}
-	return pconstruct_player_weapon(thisptr);
+	else 
+	{
+
+		if (t4net.connected == true)
+			t4net.SendPlayerSnapShot();
+		else
+			t4net.ConnectToServer();
+	}
+
+	return;
 }
+
 
 typedef int(__stdcall *tlevel_load_actor)(void *thisptr, char* a2, int a3, int a4);
 tlevel_load_actor plevel_load_actor;
 
 int __stdcall level_load_actor(void* thisptr, char* a2, int a3, int a4)
 {
-	char text_out[2000];
+	/*char text_out[2000];
 	memset(text_out, 0x00, 2000);
 	sprintf(text_out, "thisptr: %p, a2: %s, a3: %08X, a4: %08X", thisptr, a2, a3, a4);
 
 	FILE* fh = fopen("level_load.txt", "a+");
 	fwrite(text_out, strlen(text_out), 1, fh);
 	fclose(fh);
-
+	*/
 	return plevel_load_actor(thisptr, a2, a3, a4);
 }
 
-typedef int (__stdcall *tconstruct_actor)(void* thisptr, char* object_name, char* object_path);
+typedef int(__stdcall *tconstruct_actor)(void* thisptr, char* object_name, char* object_path);
 tconstruct_actor pconstruct_actor;
 
-int i = 0;
-int __stdcall construct_actor(void* thisptr, char* object_name,char* object_path)
+//int i = 0;
+int __stdcall construct_actor(void* thisptr, char* object_name, char* object_path)
 {
+	/*
 	FILE* fh = fopen("construct_actor.txt", "a+");
 
 	char text_out[2000];
 	memset(text_out, 0x00, 2000);
 	sprintf(text_out, "this: %p, object_name: %s, object_path: %s\r\n", thisptr, object_name, object_path);
 	fwrite(text_out, strlen(text_out), 1, fh);
-	fclose(fh);
+	fclose(fh);*/
 
 	int ret = pconstruct_actor(thisptr, object_name, object_path);
 	if (!strcmp(object_name, "DMPlayer"))
 	{
-		if (i = 1)
-		{
-			nPlayerPTR = (DWORD)ret;
-			printf("nPlayerPTR: %08X - construct_actor\r\n", nPlayerPTR);
-		}
-		i++;
+		nPlayerPTR = (DWORD)ret;
 	}
-	//printf("construct_actor: %08X\r\n",ret);
 
+
+	/*
+		So we know that a player is being spawned when the "Weapon" is called", and t4net.connected will stop us from running this multiple times.
+
+		This is a horrible way to do this but it'll do for now, we also aren't sending any kind of ack ack from the server, so if the packet gets dropped we're a little screwed.
+	*/
+
+	if (!strcmp(object_name, "Weapon") && !strcmp(object_path,"y:\\Data\\Actors\\Weapons\\WarClub\\WarClub.atr") && t4net.connected == false && t4net.server == false) 
+	{
+		t4net.ConnectToServer(); 
+	}
+
+	
 	return ret;
 }
 
 
 
-void UnCrouch(DMPlayer* thisptr)
-{
-	__asm
-	{
-		PUSHAD
-		PUSHFD
-		push 0
-		mov ecx, thisptr
-		mov eax, 0x4CFB90
-		call eax
-		POPFD
-		POPAD
-	}
 
-}
 
 
 void FireWeapon()
@@ -316,29 +296,24 @@ void FireWeapon()
 	Player* player1 = 0;
 
 
-	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-	if (TurokEngine)
+		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
+
 		if (TurokEngine->pT4Game)
 			if (TurokEngine->pT4Game->pEngineObjects)
 				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[1])
 					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pPlayer)
 						player1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pPlayer;
 
-	if(player1 !=0)
+	if (player1 != 0)
+	{
+		BYTE OrigByte = *(BYTE*)0x004DAD49;
+		*(BYTE*)0x004DAD49 = 0xEB;
+
 		player1->respawn(0, 0);
 
-	/*
-//	lPlayer1->crouch(0, 1.0f);
-	
-	//Sleep(500);
-	//UnCrouch(lPlayer1);
+		*(BYTE*)0x004DAD49 = OrigByte;
+	}
 
-	lPlayer1->PlayerAction = 0;
-	lPlayer1->fire_weapon(0, 0); 
-	//lPlayer1->fire_held(0.0f, 0);
-	//Sleep(100);
-	lPlayer1->fire_release(0.1f);
-	*/
 }
 
 
@@ -392,107 +367,54 @@ void __stdcall player_death4(void* thisptr, float a2)
 	if (thisptr == 0)
 		return;
 
-	return pplayer_death4(thisptr,a2);
+	/*
+	  .text:004D916D mov     ecx, [esi+1B20h]
+	  .text:004D9173 test    byte ptr [ecx+30h], 40h
+	*/
+
+	if (!*(DWORD*)((BYTE*)thisptr + 0x1B20))
+		return;
+
+
+	return pplayer_death4(thisptr, a2);
+}
+
+typedef int(__stdcall *tplayer_respawn_crashfix)(void* thisptr);
+tplayer_respawn_crashfix pplayer_respawn_crashfix;
+
+int __stdcall player_respawn_crashfix(void* thisptr)
+{
+
+	if (thisptr == 0)
+		return 0;
+
+	if (!*(DWORD*)((BYTE*)thisptr + 0x1B14))
+		return 0;
+
+	return pplayer_respawn_crashfix(thisptr);
 }
 
 typedef int(__stdcall *tspawn_object)(void* thisptr, int a2, char* object_name, char* object_path, Vector3* pos_struct, int a6);
 tspawn_object pspawn_object;
 
-int count = 0;
 int __stdcall spawn_object_engine(void* thisptr, int a2, char* object_name, char* object_path, Vector3* pos_struct, int a6)
 {
-	FILE* fh = fopen("Object_Dump.txt", "a+");
 	
-	char text_out[2000];
-	memset(text_out, 0x00, 2000);
-
-	sprintf(text_out, "this: %p a2: %i, object_name: %s, object_path: %s, x: %f, y: %f, z: %f, a6: %i\r\n", thisptr, a2, object_name, object_path, pos_struct->x, pos_struct->y, pos_struct->z, a6);
-	
-	fwrite(text_out, strlen(text_out), 1, fh);
-	fclose(fh);
-
 	int ret = pspawn_object(thisptr, a2, object_name, object_path, pos_struct, a6);
 
-	if (!strcmp(object_path, "y:\\Data\\Actors\\EnemyWeapons\\AllyShotgun\\AllyShotgun.atr"))
+	/*if(!strcmp(object_path,"y:\\Data\\Actors\\EnemyWeapons\\SpikedMine\\SpikedMine.atr"))
 	{
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-		DMPlayer* lPlayer1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
-		lPlayer1->PlayerAction = 0;
-
-		lPlayer1->fire_weapon(0, 0); // 3A4 = 0
-		lPlayer1->fire_held(3.0f, 0); //0xE9
-		
-		lPlayer1->fire_release(3.0f);
-		
-		//printf("Attempting to fire\r\n");
-
-	}
-
-	if (!strcmp(object_path, "y:\\Data\\Actors\\EnemyWeapons\\EnemyFlameThrower\\EnemyFlameThrower.atr"))
-	{
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-		DMPlayer* lPlayer1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
-		lPlayer1->fire_weapon(0, 0); // 3A4 = 0
-		lPlayer1->fire_held(0.2f, 0); //0xE9
-		lPlayer1->fire_release(0.02979338f);
-
-		printf("Firing flame thrower\r\n");
-		//lPlayer1->fire_weapon2(1.0f);
-	}
-
-	if (!strcmp(object_path, "y:\\Data\\Actors\\EnemyWeapons\\AllySniperRifle\\AllySniperRifle.atr"))
-	{
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-		DMPlayer* lPlayer1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
-		lPlayer1->fire_weapon(0, 0);
-		lPlayer1->fire_held(0.2f, 0);
-		lPlayer1->fire_release(1.0f);
-
-	}
-	/*
-	if (!strcmp(object_path, "y:\\Data\\Actors\\EnemyWeapons\\Warclub\\Warclub.atr"))
-	{
-		count++;
-
-		if (count > 4)
-		{
-
-		
-			T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-			DMPlayer* lPlayer1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
-			lPlayer1->fire_weapon(0, 0);
-			lPlayer1->fire_held(0.0f, 0);
-			//lPlayer1->fire_weapon2(5.99901f);
-		
-
-		}
-	}*/
-
-	if(!strcmp(object_path,"y:\\Data\\Actors\\EnemyWeapons\\SpikedMine\\SpikedMine.atr"))
-	{
-
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-		DMPlayer* lPlayer1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
-		lPlayer1->pWeaponWheel->bFlameThrower = 1;
-		lPlayer1->pWeaponWheel->bFlameThrowerAllowed = 1;
-		lPlayer1->pWeaponWheel->FlameThrowerAmmo = 500;
-
-		/*lPlayer1->fire_weapon(0,0);
-		lPlayer1->fire_held(0.2, 0);
-		lPlayer1->fire_weapon2(1.0f);
-		*/
-		count++;
-
-		
-		//if (count == 1)
-	//	{
 			char *spawn_path = new char[255];
-			memset(spawn_path, 0x00, 255);
-			sprintf(spawn_path, "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
+			ZeroMemory(spawn_path, 255);
+			//memset(spawn_path, 0x00, 255);
 
+			sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr")+1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
+			
 			char *spawn_name = new char[20];
-			memset(spawn_name, 0x00, 20);
-			sprintf(spawn_name, "DMPlayer");
+			ZeroMemory(spawn_name, 20);
+			//memset(spawn_name, 0x00, 20);
+
+			sprintf_s(spawn_name, strlen("DMPlayer")+1, "%s", "DMPlayer");
 
 			Vector3 npos_struct = *pos_struct;
 			npos_struct.x += 5.0f;
@@ -506,43 +428,9 @@ int __stdcall spawn_object_engine(void* thisptr, int a2, char* object_name, char
 			*(BYTE*)0x004DAD49 = 0xEB;
 
 			DWORD nPlayerPTR = (DWORD)pspawn_object(thisptr, 0, spawn_name, spawn_path, &npos_struct, 0);
-			printf("nPlayerPTR: %08X - spawn_object\r\n", nPlayerPTR);
 
 			*(BYTE*)0x004DAD49 = OrigByte;
-		//}
-
-			/*
-
-		if (count == 2 )
-		{
-			DMPlayer* pPlayer2 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pActor->pDMPlayer;
-			/*pPlayer2->pWeaponWheel->bRocket1 = 1;
-			pPlayer2->pWeaponWheel->bRocket2 = 1;
-			pPlayer2->pWeaponWheel->RocketAmmo1 = 20;
-			pPlayer2->pWeaponWheel->RocketAmmo2 = 20;
-			pPlayer2->pWeaponWheel->RocketAmmo3 = 20;
-			pPlayer2->WeaponSwitch = -1;
-			pPlayer2->TimeTillSwitch = 0.4f;
-			*/
-		/*	pPlayer2->jump(0, 1.0f);
-		}
-
-		if (count == 3)
-		{
-			DMPlayer* pPlayer2 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pActor->pDMPlayer;
-			pPlayer2->fire_weapon(0, 0);
-			pPlayer2->fire_held(0.2f, 0);
-
-		}
-
-		if (count == 5)
-		{
-			DMPlayer* pPlayer2 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pActor->pDMPlayer;
-			pPlayer2->fire_weapon2(0.2f);
-
-		}*/
-
-	}
+	}*/
 
 	
 	return ret;
@@ -574,26 +462,81 @@ int __cdecl call_print_text(int obj, int text, int a3, int a4, int a5, int a6, i
 	return pprint_text(obj, text, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
 }
 
-int __cdecl call_spawn_object(int obj, int a2, char* object_name, char* object_path, int pos_struct, int a6)
+DMPlayer* TurokEngine::GetDMPlayer(int index)
 {
-	typedef int(__cdecl *spawn_object)(int obj, int a2, char* object_name, char* object_path, int pos_struct, int a6);
-	spawn_object pspawn_object = (spawn_object)((char*)0x5120E0);
+	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
+	if (TurokEngine->pT4Game)
+		if (TurokEngine->pT4Game->pEngineObjects)
+			if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index])
+				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor)
+				{
+					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer)
+						return TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer;
+				}
+				else
+				{
+					return (DMPlayer*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pPlayer;
+				}
 
-	return pspawn_object(obj, a2, object_name, object_path, pos_struct, a6);
+
+	return 0;
 }
 
-//Broken for now, seems to not resolve correctly.
-void TurokEngine::spawn_object(char* object_path,int position)
+void TurokEngine::UnCrouch(DMPlayer* thisptr)
 {
-	int objptr = *(DWORD *)(*(DWORD *)(*(DWORD *)(*(DWORD *)(*(DWORD *)(*(DWORD *)(0x6B52E4 + 0xC0) + 4) + 0x664) + 0x29C) + 0x1A38) + 0x48);
-	
-	call_spawn_object(objptr, 1, "EnemyWeapon", object_path, position, 0);
+	__asm
+	{
+		PUSHAD
+		PUSHFD
+		push 0
+		mov ecx, thisptr
+		mov eax, 0x4CFB90
+		call eax
+		POPFD
+		POPAD
+	}
 
+}
+
+//In the future this will include the model and such, we also need to be sure players are spawning at specific positions, or transfer positions from server snapshots.
+//It's probably best to hook the spawnpoint routine so we can sync spawning.
+
+DMPlayer* TurokEngine::SpawnPlayer()
+{
+
+	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
+
+	char *spawn_path = new char[255];
+	ZeroMemory(spawn_path, 255);
+
+	sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
+
+	char *spawn_name = new char[20];
+	ZeroMemory(spawn_name, 20);
+
+	sprintf_s(spawn_name, strlen("DMPlayer") + 1, "%s", "DMPlayer");
+
+	Vector3 npos_struct;
+	npos_struct.x = 12.0f;
+	npos_struct.y = 10.0f;
+	npos_struct.z = 5.0f;
+
+	DWORD dwOld;
+	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
+
+	BYTE OrigByte = *(BYTE*)0x004DAD49;
+	*(BYTE*)0x004DAD49 = 0xEB;
+
+	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
+
+	*(BYTE*)0x004DAD49 = OrigByte;
+
+	return nPlayer;
 }
 
 void TurokEngine::print_text(char* text)
 {
-	HMODULE T4Base = GetModuleHandle("Turok4.exe");
+	HMODULE T4Base = GetModuleHandle(L"Turok4.exe");
 	int object_ptr = *(int*)((char*)T4Base + 0x2B52E4);
 	call_print_text(object_ptr, (int)text, 0x41700000, 0x3F800000, 4, 0x3EFFDDDE, 0x3EB25B6B, 0, 2, 1, 1, 2);
 }
@@ -613,10 +556,6 @@ void TurokEngine::SetModHooks()
 	pconstruct_actor = (tconstruct_actor)DetourClassFunc((BYTE*)0x50DEE0, (BYTE*)construct_actor, 10);
 
 	VirtualProtect(pconstruct_actor, 4, PAGE_EXECUTE_READWRITE, &dwBack);
-
-	pactor_spawn_1 = (tactor_spawn_1)DetourClassFunc((BYTE*)0x005C1DD0, (BYTE*)actor_spawn_1, 10);
-
-	VirtualProtect(pactor_spawn_1, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 	pinput_query = (tinput_query)DetourClassFunc((BYTE*)0x4FAA20, (BYTE*)input_query, 10);
 
@@ -650,7 +589,14 @@ void TurokEngine::SetModHooks()
 
 	VirtualProtect(pplayer_death4, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
+	pplayer_respawn_crashfix = (tplayer_respawn_crashfix)DetourClassFunc((BYTE*)0x4D91D0, (BYTE*)player_respawn_crashfix, 12);
+
+	VirtualProtect(pplayer_respawn_crashfix, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
 	Codecave(0x0050F850, CameraFuncLoop1, 1);
 	Codecave(0x0050F8F0, CameraFuncLoop2, 1);
 	Codecave(0x004EE7F0, screen_effect_osd, 1);
+
+    t4net.Initalize();
+	
 }

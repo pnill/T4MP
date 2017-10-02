@@ -1,4 +1,5 @@
 // Generated using ReClass 2016
+#pragma once
 
 class T4Engine;
 class T4Game;
@@ -412,19 +413,19 @@ public:
 	char pad_0x0400[0x41C]; //0x0400
 	__int32 UnCrouchAction; //0x081C 
 	char pad_0x0820[0x10E0]; //0x0820
-	float WalkLeft; //0x1900 
-	float WalkRight; //0x1904 
-	float WalkForward; //0x1908 
-	float WalkBackward; //0x190C 
+	float Walk_left; //0x1900 
+	float Walk_right; //0x1904 
+	float Walk_forward; //0x1908 
+	float Walk_backward; //0x190C 
 	char pad_0x1910[0x38]; //0x1910
 	char N00000BA4[8]; //0x1BC5980 
 	char pad_0x1950[0xA0]; //0x1950
 	WeaponWheel* pWeaponWheel; //0x19F0 
 	char pad_0x19F4[0x24]; //0x19F4
-	__int32 WeaponSwitch; //0x1A18 
-	float TimeToSwitch; //0x1A1C 
+	__int32 Weapon_switch; //0x1A18 
+	float Weapon_switch_time; //0x1A1C 
 	char pad_0x1A20[0x28]; //0x1A20
-	__int32 WeaponSlot; //0x1A48 
+	__int32 Weapon_slot; //0x1A48 
 	char pad_0x1A4C[0x150]; //0x1A4C
 	char* N00000D64; //0x1B9C 
 	char* N00000D65; //0x1BA0 
@@ -463,7 +464,7 @@ public:
 class WeaponWheel
 {
 public:
-	__int32 bWarClub; //0x0000 
+	__int32 bHas_WarClub; //0x0000 
 	__int32 UnkValue; //0x0004 
 	__int32 UnkValue2; //0x0008 
 	__int32 UnkValue3; //0x000C 
@@ -471,137 +472,137 @@ public:
 	__int32 WarClubVal1; //0x0014 
 	__int32 WarClubVal2; //0x0018 
 	char pad_0x001C[0x4]; //0x001C
-	__int32 bWarClub2; //0x0020 
-	__int32 bBowAllowed; //0x0024 
+	__int32 bHas_WarClub2; //0x0020 
+	__int32 bHas_Bow1; //0x0024 
 	__int32 BowID; //0x0028 
-	__int32 bowNormalAmmo; //0x002C 
-	__int32 bowExplosiveAmmo; //0x0030 
-	__int32 bowPoisonAmmo; //0x0034 
-	__int32 bBowHasNormal; //0x0038 
-	__int32 bBowHasExplosive; //0x003C 
-	__int32 bBowHasPoison; //0x0040 
+	__int32 Bow_Normal_Ammo; //0x002C 
+	__int32 Bow_Explosive_Ammo; //0x0030 
+	__int32 Bow_Poison_Ammo; //0x0034 
+	__int32 bBow_Has_Normal; //0x0038 
+	__int32 bBow_Has_Explosive; //0x003C 
+	__int32 bBow_Has_Poison; //0x0040 
 	char pad_0x0044[0x4]; //0x0044
-	__int32 bBow; //0x0048 
-	__int32 bTekBowAllowed; //0x004C 
+	__int32 bHas_Bow2; //0x0048 
+	__int32 bHas_TekBow; //0x004C 
 	__int32 TekBowID; //0x0050 
-	__int32 TekbowNormalAmmo; //0x0054 
-	__int32 TekBowExplosiveAmmo; //0x0058 
-	__int32 TekBowPoisonAmmo; //0x005C 
-	__int32 bTekbowHasNormal; //0x0060 
-	__int32 bTekBowHasExplosive; //0x0064 
-	__int32 bTekBowHasPoison; //0x0068 
+	__int32 Tekbow_Normal_Ammo; //0x0054 
+	__int32 TekBow_Explosive_Ammo; //0x0058 
+	__int32 TekBow_Poison_Ammo; //0x005C 
+	__int32 bTekbow_Has_Normal; //0x0060 
+	__int32 bTekBow_Has_Explosive; //0x0064 
+	__int32 bTekBow_Has_Poison; //0x0068 
 	char pad_0x006C[0x4]; //0x006C
-	__int32 bTekbow; //0x0070 
-	__int32 bSpikeGrenadeAlowed; //0x0074 
+	__int32 bHas_Tekbow2; //0x0070 
+	__int32 bHas_SpikeGrenade; //0x0074 
 	__int32 SpikeGrenadeID; //0x0078 
-	__int32 SpikeGrenadeAmmo; //0x007C 
-	__int32 SpikeGrenadeAmmo2; //0x0080 
-	__int32 SpikeGrenadeAmmo3; //0x0084 
-	__int32 bSpikeGrenadeAmmo; //0x0088 
-	__int32 bSpikeGrenadeAmmo2; //0x008C 
-	__int32 bSpikeGrenadeAmmo3; //0x0090 
+	__int32 SpikeGrenade_Ammo; //0x007C 
+	__int32 SpikeGrenade_Ammo2; //0x0080 
+	__int32 SpikeGrenade_Ammo3; //0x0084 
+	__int32 bSpikeGrenade_Has_Ammo; //0x0088 
+	__int32 bSpikeGrenade_Has_Ammo2; //0x008C 
+	__int32 bSpikeGrenade_Has_Ammo3; //0x0090 
 	char pad_0x0094[0x4]; //0x0094
-	__int32 bSpikeGrenade; //0x0098 
-	__int32 bPistolAllowed; //0x009C 
+	__int32 bHas_SpikeGrenade2; //0x0098 
+	__int32 bHas_Pistol; //0x009C 
 	__int32 PistolID; //0x00A0 
-	__int32 PistolAmmo; //0x00A4 
-	__int32 PistolAmmo2; //0x00A8 
-	__int32 PistolAmmo3; //0x00AC 
-	__int32 bPistolAmmo; //0x00B0 
-	__int32 bPistolAmmo2; //0x00B4 
-	__int32 bPistolAmmo3; //0x00B8 
+	__int32 Pistol_Ammo; //0x00A4 
+	__int32 Pistol_Ammo2; //0x00A8 
+	__int32 Pistol_Ammo3; //0x00AC 
+	__int32 bPistol_Has_Ammo; //0x00B0 
+	__int32 bPistol_Has_Ammo2; //0x00B4 
+	__int32 bPistol_Has_Ammo3; //0x00B8 
 	char pad_0x00BC[0x4]; //0x00BC
-	__int32 bPistol; //0x00C0 
-	__int32 bShotgunAllowed; //0x00C4 
+	__int32 bHas_Pistol2; //0x00C0 
+	__int32 bHas_ShotGun; //0x00C4 
 	__int32 ShotGunID; //0x00C8 
-	__int32 ShotGunAmmo; //0x00CC 
-	__int32 ShotGunAmmo1; //0x00D0 
-	__int32 ShotGunAmmo2; //0x00D4 
-	__int32 bShotGunAmmo1; //0x00D8 
-	__int32 bShotGunAmmo2; //0x00DC 
-	__int32 bShotGunAmmo3; //0x00E0 
+	__int32 ShotGun_Ammo; //0x00CC 
+	__int32 ShotGun_Ammo1; //0x00D0 
+	__int32 ShotGun_Ammo2; //0x00D4 
+	__int32 bShotGun_Has_Ammo1; //0x00D8 
+	__int32 bShotGun_Has_Ammo2; //0x00DC 
+	__int32 bShotGun_Has_Ammo3; //0x00E0 
 	char pad_0x00E4[0x4]; //0x00E4
-	__int32 bShotGun; //0x00E8 
-	__int32 bFleecheteAllowed; //0x00EC 
+	__int32 bHas_ShotGun2; //0x00E8 
+	__int32 bHas_Fleechete; //0x00EC 
 	__int32 FleecheteID; //0x00F0 
-	__int32 FleecheteAmmo; //0x00F4 
-	__int32 MiniGunAmmo; //0x00F8 
-	__int32 FleecheteAmmo2; //0x00FC 
-	__int32 bFleecheteAmmo; //0x0100 
-	__int32 bMiniGunAmmo; //0x0104 
-	__int32 bFleecheteAmmo2; //0x0108 
+	__int32 Fleechete_Ammo; //0x00F4 
+	__int32 MiniGun_Ammo; //0x00F8 
+	__int32 Fleechete_Ammo2; //0x00FC 
+	__int32 bFleechete_Has_Ammo; //0x0100 
+	__int32 bMiniGun_Has_Ammo; //0x0104 
+	__int32 bFleechete_Has_Ammo2; //0x0108 
 	char pad_0x010C[0x4]; //0x010C
-	__int32 bFleechete; //0x0110 
-	__int32 bRocketLauncherAllowed; //0x0114 
+	__int32 bHas_Fleechete2; //0x0110 
+	__int32 bHas_RocketLauncher; //0x0114 
 	__int32 RocketLauncherID; //0x0118 
-	__int32 RocketAmmo; //0x011C 
-	__int32 RocketAmmo2; //0x0120 
-	__int32 RocketAmmo3; //0x0124 
-	__int32 bRocketAmmo; //0x0128 
-	__int32 bRocketAmmo1; //0x012C 
-	__int32 bRocketAmmo2; //0x0130 
+	__int32 RocketLauncher_Ammo; //0x011C 
+	__int32 RocketLauncher_Ammo2; //0x0120 
+	__int32 RocketLauncher_Ammo3; //0x0124 
+	__int32 bRocketLauncher_Has_Ammo; //0x0128 
+	__int32 bRocketLauncher_Has_Ammo1; //0x012C 
+	__int32 bRocketLauncher_Has_Ammo2; //0x0130 
 	char pad_0x0134[0x4]; //0x0134
-	__int32 bRocketLauncher; //0x0138 
-	__int32 bPlasmaCannonAllowed; //0x013C 
+	__int32 bHas_RocketLauncher2; //0x0138 
+	__int32 bHas_PlasmaCannon; //0x013C 
 	__int32 PlasmaCannonID; //0x0140 
-	__int32 PlasmaCannonAmmo; //0x0144 
-	__int32 PlasmaCannonAmmo2; //0x0148 
-	__int32 PlasmaCannonAmmo3; //0x014C 
-	__int32 bPlasmaCannonAmmo; //0x0150 
-	__int32 bPlasmaCannonAmmo2; //0x0154 
-	__int32 bPlasmaCannonAmmo3; //0x0158 
+	__int32 PlasmaCannon_Ammo; //0x0144 
+	__int32 PlasmaCannon_Ammo2; //0x0148 
+	__int32 PlasmaCannon_Ammo3; //0x014C 
+	__int32 bPlasmaCannon_Has_Ammo; //0x0150 
+	__int32 bPlasmaCannon_Has_Ammo2; //0x0154 
+	__int32 bPlasmaCannon_Has_Ammo3; //0x0158 
 	char pad_0x015C[0x4]; //0x015C
-	__int32 bPlasmaCannon; //0x0160 
-	__int32 bFlameThrowerAllowed; //0x0164 
+	__int32 bHas_PlasmaCannon2; //0x0160 
+	__int32 bHas_FlameThrower; //0x0164 
 	__int32 FlameThrowerID; //0x0168 
-	__int32 FlameThrowerAmmo; //0x016C 
-	__int32 FlameThrowerAmmo2; //0x0170 
-	__int32 FlameThrowerAmmo3; //0x0174 
-	__int32 bFlameThrowerAmmo; //0x0178 
-	__int32 bFlameThrowerAmmo2; //0x017C 
-	__int32 bFlameThrowerAmmo3; //0x0180 
+	__int32 FlameThrower_Ammo; //0x016C 
+	__int32 FlameThrower_Ammo2; //0x0170 
+	__int32 FlameThrower_Ammo3; //0x0174 
+	__int32 bFlameThrower_Has_Ammo; //0x0178 
+	__int32 bFlameThrower_Has_Ammo2; //0x017C 
+	__int32 bFlameThrower_Has_Ammo3; //0x0180 
 	char pad_0x0184[0x4]; //0x0184
-	__int32 bFlameThrower; //0x0188 
-	__int32 bSpiderMineAllowed; //0x018C 
+	__int32 bHas_FlameThrower2; //0x0188 
+	__int32 bHas_SpiderMine; //0x018C 
 	__int32 SpiderMineID; //0x0190 
-	__int32 SpiderMineAmmo; //0x0194 
-	__int32 SpiderMineAmmo2; //0x0198 
-	__int32 SpiderMineAmmo3; //0x019C 
-	__int32 bSpiderMineAmmo; //0x01A0 
-	__int32 bSpiderMineAmmo2; //0x01A4 
-	__int32 bSpiderMineAmmo3; //0x01A8 
+	__int32 SpiderMine_Ammo; //0x0194 
+	__int32 SpiderMine_Ammo2; //0x0198 
+	__int32 SpiderMine_Ammo3; //0x019C 
+	__int32 bSpiderMine_Has_Ammo; //0x01A0 
+	__int32 bSpiderMine_Has_Ammo2; //0x01A4 
+	__int32 bSpiderMine_Has_Ammo3; //0x01A8 
 	char pad_0x01AC[0x4]; //0x01AC
-	__int32 bSpiderMine; //0x01B0 
-	__int32 bGravityGunAllowed; //0x01B4 
+	__int32 bHas_SpiderMine2; //0x01B0 
+	__int32 bHas_GravityGun; //0x01B4 
 	__int32 GravityGunID; //0x01B8 
-	__int32 GravityGunAmmo; //0x01BC 
-	__int32 GravityGunAmmo2; //0x01C0 
-	__int32 GravityGunAmmo3; //0x01C4 
-	__int32 bGravityGunAmmo; //0x01C8 
-	__int32 bGravityGunAmmo2; //0x01CC 
-	__int32 bGravityGunAmmo3; //0x01D0 
+	__int32 GravityGun_Ammo; //0x01BC 
+	__int32 GravityGun_Ammo2; //0x01C0 
+	__int32 GravityGun_Ammo3; //0x01C4 
+	__int32 bGravityGun_Has_Ammo; //0x01C8 
+	__int32 bGravityGun_Has_Ammo2; //0x01CC 
+	__int32 bGravityGun_Has_Ammo3; //0x01D0 
 	char pad_0x01D4[0x4]; //0x01D4
-	__int32 bGravityGun; //0x01D8 
-	__int32 bDarkMatterCubeAllowed; //0x01DC 
+	__int32 bHas_GravityGun2; //0x01D8 
+	__int32 bHas_DarkMatterCube; //0x01DC 
 	__int32 DarkMatterCubeID; //0x01E0 
-	__int32 DarkMatterCubeAmmo; //0x01E4 
-	__int32 DarkMatterCubeAmmo2; //0x01E8 
-	__int32 DarkMatterCubeAmmo3; //0x01EC 
-	__int32 bDarkMatterCubeAmmo; //0x01F0 
-	__int32 bDarkMatterCubeAmmo2; //0x01F4 
-	__int32 bDarkMatterCubeAmmo3; //0x01F8 
+	__int32 DarkMatterCube_Ammo; //0x01E4 
+	__int32 DarkMatterCube_Ammo2; //0x01E8 
+	__int32 DarkMatterCube_Ammo3; //0x01EC 
+	__int32 bDarkMatterCube_Has_Ammo; //0x01F0 
+	__int32 bDarkMatterCube_Has_Ammo2; //0x01F4 
+	__int32 bDarkMatterCube_Has_Ammo3; //0x01F8 
 	char pad_0x01FC[0x4]; //0x01FC
-	__int32 bDarkMatterCube; //0x0200 
-	__int32 bCrossBowAllowed; //0x0204 
+	__int32 bHas_DarkMatterCube2; //0x0200 
+	__int32 bHas_CrossBow; //0x0204 
 	__int32 CrossBowID; //0x0208 
-	__int32 CrossBowNormalAmmo; //0x020C 
-	__int32 CrossBowExplosiveAmmo; //0x0210 
-	__int32 CrossBowPoisonAmmo; //0x0214 
-	__int32 bCrossBowNormal; //0x0218 
-	__int32 bCrossBowExplosive; //0x021C 
-	__int32 bCrossBowPoison; //0x0220 
+	__int32 CrossBow_Normal_Ammo; //0x020C 
+	__int32 CrossBow_Explosive_Ammo; //0x0210 
+	__int32 CrossBow_Poison_Ammo; //0x0214 
+	__int32 bCrossBow_Has_Normal; //0x0218 
+	__int32 bCrossBow_Has_Explosive; //0x021C 
+	__int32 bCrossBow_Has_Poison; //0x0220 
 	char pad_0x0224[0x4]; //0x0224
-	__int32 bCrossBow; //0x0228 
+	__int32 bHas_CrossBow2; //0x0228 
 
 }; //Size=0x022C
 

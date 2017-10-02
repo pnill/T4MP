@@ -27,20 +27,11 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files\Main-T4MP</Filter>
-    </ClCompile>
     <ClCompile Include="Debug.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
     <ClCompile Include="T4MP.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Weapon.cpp">
-      <Filter>Source Files\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
       <Filter>Source Files\Engine</Filter>
@@ -48,12 +39,15 @@
     <ClCompile Include="Hook.cpp">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
+    <ClCompile Include="t4net.cpp">
+      <Filter>Source Files\Main-T4MP</Filter>
+    </ClCompile>
+    <ClCompile Include="t4mp.pb.cc">
+      <Filter>Source Files\Main-T4MP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Debug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Hook.h">
@@ -62,17 +56,17 @@
     <ClInclude Include="T4MP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Source Files\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Weapon.h">
-      <Filter>Source Files\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Engine.h">
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="T4Engine.h">
       <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="t4net.h">
+      <Filter>Source Files\Main-T4MP</Filter>
+    </ClInclude>
+    <ClInclude Include="t4mp.pb.h">
+      <Filter>Source Files\Main-T4MP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
