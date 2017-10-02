@@ -591,12 +591,21 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 				int player_index = player.index();
 
 	
+				/* 
+					This presents an interesting problem, if someone else joined before us they could have the index of 1, where we want the server to have it... 
+					It may be best to avoid using 1 and 0 at all and reserve them for the local player and host for indexes, making the server assigned index 2+ only.
+				*/
+
 				if (player_index == local_index)
 				{
 					local_player = true;
 					player_index = 0;
 				}
 			
+				/* If the index is 0 and it wasn't our local player's remote index, chances are it's the host which should have the index of 1 on our end */
+				if (local_player == false && player_index == 0)
+					player_index = 1; 
+
 				bool networked_player = false;
 
 				if (!local_player)
@@ -612,19 +621,20 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 					if (!networked_player)
 					{
+						printf("ProcessServerSnap(): No Network player was found creating one and spawning them! - player_index: %i\r\nProcessServerSnap(): netplayers.size(): %i\r\nPossible Player Indexes:\r\n",player_index,netplayers.size());
+				
 						NetworkPlayer* nPlayer = new NetworkPlayer;
 						nPlayer->index = player_index;
 						netEngine.SpawnPlayer();
+
+						netplayers.push_back(nPlayer);
 					}
 
 				}
 
 				bool player_valid = false;
 
-				/* If the index is 0 and it wasn't our local player's remote index, chances are it's the host which should have the index of 1 on our end */
-				if (local_player == false && player_index == 0) 
-					player_index = 1;
-
+	
 				/* Use the player's index to grab the pointer from the in-game array for their BlendedCamera object. */
 				BlendedCamera* player_camera = t4engine->pT4Game->pEngineObjects->pCameraArray[player_index];
 				DMPlayer *pDMPlayer = NULL;
@@ -879,19 +889,26 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 			Packet ConnectAckPak;
 			ConnectAckPak.set_type(Packet_Type_client_connect);
 
-			ConnectAck Ack;
-			Ack.set_index(check_player->index);
+			ConnectAck *Ack = ConnectAckPak.mutable_connect_ack();
+			Ack->set_index(check_player->index);
 
 			char * AckPak = new char[ConnectAckPak.ByteSize()];
 			ZeroMemory(AckPak, ConnectAckPak.ByteSize());
 
-
-			struct sockaddr_in playerAddr;
+			ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
+			/*struct sockaddr_in playerAddr;
 			playerAddr.sin_family = AF_INET;
 			playerAddr.sin_port = client_port;
 			playerAddr.sin_addr.s_addr = ip;
+			*/
 
-			sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&playerAddr, sizeof(playerAddr));
+			int sendlen = sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&clientAddr, sizeof(clientAddr));
+
+			if (sendlen == SOCKET_ERROR)
+				printf("WSAError on Send: %08X\r\n", WSAGetLastError());
+
+			char ipbuf[INET_ADDRSTRLEN];
+			printf("Sending data back to %s:%d\r\n", inet_ntop(AF_INET, &clientAddr.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(clientAddr.sin_port));
 
 
 			return false;
@@ -902,27 +919,24 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 	nPlayer->ipaddr = ip;
 	nPlayer->port = client_port;
 	nPlayer->index = netplayers.size() + 1;
-	
+
 	netplayers.push_back(nPlayer);
 
 	
 	Packet ConnectAckPak;
 	ConnectAckPak.set_type(Packet_Type_client_connect);
 	
-	ConnectAck Ack;
-	Ack.set_index(nPlayer->index);
+	ConnectAck *Ack = ConnectAckPak.mutable_connect_ack();
+	Ack->set_index(nPlayer->index);
 
 	char * AckPak = new char[ConnectAckPak.ByteSize()];
 	ZeroMemory(AckPak, ConnectAckPak.ByteSize());
 
+	ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
 
-	struct sockaddr_in playerAddr;
-	playerAddr.sin_family = AF_INET;
-	playerAddr.sin_port = client_port;
-	playerAddr.sin_addr.s_addr = ip;
+	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&clientAddr, sizeof(clientAddr));
 
-	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&playerAddr, sizeof(playerAddr));
-
+	netEngine.SpawnPlayer();
 
 
 	return true;

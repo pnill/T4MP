@@ -221,7 +221,6 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 	}
 	else 
 	{
-
 		if (t4net.connected == true)
 			t4net.SendPlayerSnapShot();
 		else
