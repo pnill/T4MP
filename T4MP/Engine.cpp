@@ -211,9 +211,10 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 		}
 	}
 
-	pinput_query(thisptr, pInputPointer);
 
 	t4net.ProcessMessage();
+
+	pinput_query(thisptr, pInputPointer);
 
 	if (t4net.server)
 	{

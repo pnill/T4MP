@@ -374,12 +374,32 @@ void T4Network::SendPlayerSnapShot()
 		player_snap->set_walk_left((local_player->Walk_left > 0.0f ));
 		player_snap->set_walk_right((local_player->Walk_right > 0.0f ));
 
+		player_snap->set_x(local_player->POS.x);
+		player_snap->set_y(local_player->POS.y);
+		player_snap->set_z(local_player->POS.z);
+
 		player_snap->set_weapon_switch_time(local_player->Weapon_switch_time);
 		player_snap->set_weapon_slot(local_player->Weapon_slot);
 		player_snap->set_weapon_switch(local_player->Weapon_switch);
 
+	
+
 		/* need to do jump, crouch, fire, fire_release, fire_hold still*/
+
+		char* playersnap_packet = new char[PlayerSnapPacket.ByteSize()];
+		ZeroMemory(playersnap_packet, PlayerSnapPacket.ByteSize());
+		
+		PlayerSnapPacket.SerializeToArray(playersnap_packet, PlayerSnapPacket.ByteSize());
+
+		struct sockaddr_in send_to;
+		send_to.sin_family = AF_INET;
+		send_to.sin_port = htons(port);
+		inet_pton(AF_INET, server_ip, &send_to.sin_addr.s_addr);
+
+
+		sendto(serverSock, playersnap_packet, PlayerSnapPacket.ByteSize(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
 	}
+
 }
 
 /* Only the host should ever be doing this */
@@ -805,43 +825,47 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 						pDMPlayer->crouch(0, 1.0f);
 					else // should probably be sure they are actually crouched before doing this as it could cause other actions to fail/cancel
 						netEngine.UnCrouch(pDMPlayer);
-
-
-					/* View Angles*/
-					pDMPlayer->ViewX = player.viewx();
-					pDMPlayer->ViewY = player.viewy();
-
-					/* Player Movement - we use these to enable actual walk animation instead of just sliding. */
-					if (player.walk_backward())
-						pDMPlayer->Walk_backward = 1.0f;
-					else
-						pDMPlayer->Walk_backward = 0.0f;
-
-					if (player.walk_forward())
-						pDMPlayer->Walk_forward = 1.0f;
-					else
-						pDMPlayer->Walk_forward = 0.0f;
-
-					if (player.walk_left())
-						pDMPlayer->Walk_left = 1.0f;
-					else
-						pDMPlayer->Walk_left = 0.0f;
-
-					if (player.walk_right())
-						pDMPlayer->Walk_right = 1.0f;
-					else
-						pDMPlayer->Walk_right = 0.0f;
 					
-					/* Did they jump?, also need to get an idea of what these floats actually do and if they need to be synced. */
-					if (player.jump())
-						pDMPlayer->jump(0,0.1f); // not sure how adjusting position just after doing this will affect it, hopefully it just plays jump animation/sounds and such and syncs to the same position we'd expect.
+					if (!local_player)
+					{
 
-					/* Player Position */
+						/* View Angles*/
+						pDMPlayer->ViewX = player.viewx();
+						pDMPlayer->ViewY = player.viewy();
 
-					pDMPlayer->POS.x = player.x();
-					pDMPlayer->POS.y = player.y();
-					pDMPlayer->POS.z = player.z();
+						/* Player Position */
 
+						pDMPlayer->POS.x = player.x();
+						pDMPlayer->POS.y = player.y();
+						pDMPlayer->POS.z = player.z();
+
+						/* Player Movement - we use these to enable actual walk animation instead of just sliding. */
+						if (player.walk_backward())
+							pDMPlayer->Walk_backward = 1.0f;
+						else
+							pDMPlayer->Walk_backward = 0.0f;
+
+						if (player.walk_forward())
+							pDMPlayer->Walk_forward = 1.0f;
+						else
+							pDMPlayer->Walk_forward = 0.0f;
+
+						if (player.walk_left())
+							pDMPlayer->Walk_left = 1.0f;
+						else
+							pDMPlayer->Walk_left = 0.0f;
+
+						if (player.walk_right())
+							pDMPlayer->Walk_right = 1.0f;
+						else
+							pDMPlayer->Walk_right = 0.0f;
+
+						/* Did they jump?, also need to get an idea of what these floats actually do and if they need to be synced. */
+						if (player.jump())
+							pDMPlayer->jump(0, 0.1f); // not sure how adjusting position just after doing this will affect it, hopefully it just plays jump animation/sounds and such and syncs to the same position we'd expect.
+
+					
+					}
 
 					/* 
 						Weapon Switch  - Important to do this BEFORE firing as they could have changed weapons!, be sure to update weapon slot first so we switch appropriately
@@ -863,6 +887,9 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 					if (player.fire_release())
 						pDMPlayer->fire_release(player.fire_release_time());
+
+					pDMPlayer->pHealth->Current = player.current_health();
+					pDMPlayer->pHealth->Max = player.max_health();
 
 				}
 			
