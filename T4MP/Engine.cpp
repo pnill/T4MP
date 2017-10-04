@@ -286,37 +286,6 @@ int __stdcall construct_actor(void* thisptr, char* object_name, char* object_pat
 }
 
 
-
-
-
-
-void FireWeapon()
-{
-
-	Player* player1 = 0;
-
-
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-
-		if (TurokEngine->pT4Game)
-			if (TurokEngine->pT4Game->pEngineObjects)
-				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[1])
-					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pPlayer)
-						player1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pPlayer;
-
-	if (player1 != 0)
-	{
-		BYTE OrigByte = *(BYTE*)0x004DAD49;
-		*(BYTE*)0x004DAD49 = 0xEB;
-
-		player1->respawn(0, 0);
-
-		*(BYTE*)0x004DAD49 = OrigByte;
-	}
-
-}
-
-
 typedef char(__stdcall *tpause_menu)(void* thisptr, int a2);
 tpause_menu ppause_menu;
 
@@ -482,6 +451,73 @@ DMPlayer* TurokEngine::GetDMPlayer(int index)
 	return 0;
 }
 
+typedef void(__stdcall *tFireWeapon)(DMPlayer *pThis, int a1, int a2);
+tFireWeapon pFireWeapon;
+
+void __stdcall FireWeapon(DMPlayer* pDMPlayer, int a1, int a2)
+{
+	TurokEngine tengine;
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false)
+	{
+		t4net.fire_set = true;
+		return;
+	}
+
+	return pFireWeapon(pDMPlayer, a2, a2);
+}
+
+typedef int(__stdcall *tReleaseFire)(DMPlayer* pThis, float HeldTime);
+tReleaseFire pReleaseFire;
+
+int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
+{
+	TurokEngine tengine;
+
+
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_release == false)
+	{
+		t4net.fire_release_time = HeldTime;
+		t4net.fire_release = true;
+	
+		return 0;
+	}
+
+	return pReleaseFire(pDMPlayer, HeldTime);
+}
+
+typedef int(__stdcall *tHoldFire)(DMPlayer* pDMPlayer, float HeldTime, int a2);
+tHoldFire pHoldFire;
+
+int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
+{
+	TurokEngine tengine;
+
+	if (pDMPlayer == tengine.GetDMPlayer(0))
+	{
+		t4net.fire_hold_time = HeldTime;
+		t4net.fire_hold = true;
+	}
+
+	return pHoldFire(pDMPlayer, HeldTime, a2);
+}
+
+typedef int(__thiscall *tWeaponCheck)(void* Pthis, int WeaponID, int Unk);
+tWeaponCheck pWeaponCheck = (tWeaponCheck)(0x004E3720);
+
+typedef int(__thiscall *tWeaponSwitch)(void* Pthis, int WeaponID, int Unk);
+tWeaponSwitch pWeaponSwitch = (tWeaponSwitch)(0x004E3AF0);
+
+
+void SwitchWeapon(void* WeaponPointer, int WeaponID)
+{
+	
+	if (pWeaponCheck(WeaponPointer, WeaponID, 0))
+	{
+		pWeaponSwitch(WeaponPointer, WeaponID, 0);
+	}
+
+}
+
 void TurokEngine::UnCrouch(DMPlayer* thisptr)
 {
 	__asm
@@ -497,6 +533,7 @@ void TurokEngine::UnCrouch(DMPlayer* thisptr)
 	}
 
 }
+
 
 //In the future this will include the model and such, we also need to be sure players are spawning at specific positions, or transfer positions from server snapshots.
 //It's probably best to hook the spawnpoint routine so we can sync spawning.
@@ -592,6 +629,18 @@ void TurokEngine::SetModHooks()
 	pplayer_respawn_crashfix = (tplayer_respawn_crashfix)DetourClassFunc((BYTE*)0x4D91D0, (BYTE*)player_respawn_crashfix, 12);
 
 	VirtualProtect(pplayer_respawn_crashfix, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pFireWeapon = (tFireWeapon)DetourClassFunc((BYTE*)0x004DBC70, (BYTE*)FireWeapon, 9);
+	
+	VirtualProtect(pFireWeapon, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pReleaseFire = (tReleaseFire)DetourClassFunc((BYTE*)0x4D6E40, (BYTE*)ReleaseFire, 15);
+
+	VirtualProtect(pReleaseFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pHoldFire = (tHoldFire)DetourClassFunc((BYTE*)0x4D6DF0, (BYTE*)HoldFire, 11);
+	
+	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	Codecave(0x0050F850, CameraFuncLoop1, 1);
 	Codecave(0x0050F8F0, CameraFuncLoop2, 1);

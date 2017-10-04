@@ -152,23 +152,30 @@ void T4Network::SendSnapShot()
 			player_weaponwheel->set_crossbow_poison_ammo(player_weapon->CrossBow_Poison_Ammo);
 		}
 
-		if (netEngine.crouch)
+		/*if (netEngine.)
 			player_data->set_crouch(true);
 
 		if (netEngine.jump_set)
 			player_data->set_jump(true);
+			*/
 
-		if (netEngine.fire_hold)
+		if (fire_set)
+		{
+			player_data->set_fire(true);
+		}
+
+		if (fire_hold)
 		{
 			player_data->set_fire_hold(true);
-			player_data->set_fire_hold_time(netEngine.fire_hold_time);
+			player_data->set_fire_hold_time(fire_hold_time);
 		}
 
-		if (netEngine.fire_release)
+		if (fire_release)
 		{
 			player_data->set_fire_release(true);
-			player_data->set_fire_release_time(netEngine.fire_release_time);
+			player_data->set_fire_release_time(fire_release_time);
 		}
+
 
 		/* POS Data */
 		player_data->set_x(player->POS.x);
@@ -256,24 +263,32 @@ void T4Network::SendSnapShot()
 				player_weaponwheel->set_crossbow_poison_ammo(player_weapon->CrossBow_Poison_Ammo);
 			}
 
-			if (netEngine.crouch)
+			if (update_player->fire_set)
+			{
+				player_data->set_fire(true);
+			}
+
+			if (update_player->fire_hold)
+			{
+				player_data->set_fire_hold(true);
+				player_data->set_fire_hold_time(update_player->fire_hold_time);
+			}
+
+			if (update_player->fire_release)
+			{
+				player_data->set_fire_release(true);
+				player_data->set_fire_release_time(update_player->fire_release_time);
+			}
+
+			
+			/*if (netEngine.crouch)
 				player_data->set_crouch(true);
 
 			if (netEngine.jump_set)
 				player_data->set_jump(true);
+			*/
 
-			if (netEngine.fire_hold)
-			{
-				player_data->set_fire_hold(true);
-				player_data->set_fire_hold_time(netEngine.fire_hold_time);
-			}
-
-			if (netEngine.fire_release)
-			{
-				player_data->set_fire_release(true);
-				player_data->set_fire_release_time(netEngine.fire_release_time);
-			}
-
+		
 			/* POS Data */
 			player_data->set_x(player->POS.x);
 			player_data->set_y(player->POS.y);
@@ -322,6 +337,33 @@ void T4Network::SendSnapShot()
 	snappak.Clear();
 
 	delete[] SnapPacket;
+
+	if (fire_release)
+	{
+		fire_set = false;
+		fire_hold = false;
+		fire_release = false;
+	}
+
+	for (NetworkPlayer* net_player : netplayers)
+	{
+
+		if (net_player->fire_release)
+		{
+			net_player->fire_hold = false;
+			net_player->fire_release = false;
+			net_player->fire_set = false;
+		}
+
+		/*sockaddr_in playerAddr;
+		playerAddr.sin_port = net_player->port; // This should already be in the correct order.
+		playerAddr.sin_addr.s_addr = net_player->ipaddr;
+		playerAddr.sin_family = AF_INET;
+
+		sendto(serverSock, SnapPacket, snappak.ByteSize(), 0, (SOCKADDR*)&playerAddr, sizeof(playerAddr));*/
+
+	}
+
 
 }
 
@@ -385,6 +427,16 @@ void T4Network::SendPlayerSnapShot()
 	
 
 		/* need to do jump, crouch, fire, fire_release, fire_hold still*/
+		if (fire_set)
+		{
+			player_snap->set_fire(true);
+		}
+
+		if (fire_release)
+		{
+			player_snap->set_fire_release_time(fire_release_time);
+			player_snap->set_fire_release(true);
+		}
 
 		char* playersnap_packet = new char[PlayerSnapPacket.ByteSize()];
 		ZeroMemory(playersnap_packet, PlayerSnapPacket.ByteSize());
@@ -406,11 +458,14 @@ void T4Network::SendPlayerSnapShot()
 void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_short pPort)
 {
 	int player_index = 0;
-	
+
+	NetworkPlayer *pnet_player = NULL;
+
 	for (NetworkPlayer* net_player : netplayers)
 	{
 		if (net_player->port == pPort && net_player->ipaddr == pIP)
 		{
+			pnet_player = net_player;
 			player_index = net_player->index;
 			break;
 		}
@@ -432,9 +487,10 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		pPlayer->POS.y = pPlayerSnap.y();
 		pPlayer->POS.z = pPlayerSnap.z();
 
-		pPlayer->Weapon_slot = pPlayerSnap.weapon_slot();
 		pPlayer->Weapon_switch_time = pPlayerSnap.weapon_switch_time();
-		pPlayer->Weapon_switch = pPlayerSnap.weapon_switch();
+
+		if (pPlayer->Weapon_slot != pPlayerSnap.weapon_slot())
+			SwitchWeapon(&pPlayer->pWeapon, (pPlayerSnap.weapon_slot()) + 1);
 
 		if (pPlayerSnap.walk_backward())
 			pPlayer->Walk_backward = 1.0f;
@@ -465,15 +521,25 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 			pPlayer->jump(0, 1.0f);
 		
 		if (pPlayerSnap.fire())
+		{
 			pPlayer->fire_weapon(0, 0);
-
+			pnet_player->fire_set = true;
+		}
+	
 		if (pPlayerSnap.fire_hold())
+		{
 			pPlayer->fire_held(pPlayerSnap.fire_hold_time(), 0);
+			pnet_player->fire_hold = true;
+			pnet_player->fire_hold_time = pPlayerSnap.fire_hold_time();
+		}
 
 		if (pPlayerSnap.fire_release())
+		{
 			pPlayer->fire_release(pPlayerSnap.fire_release_time());
-
-
+			pnet_player->fire_release = true;
+			pnet_player->fire_release_time = pPlayerSnap.fire_release_time();
+		}
+	
 
 	}
 	else
@@ -506,14 +572,21 @@ void T4Network::ProcessMessage()
 		return;
 	}
 
-	char buf[255];
-	ZeroMemory(buf, 255);
-	
-	clientLen = sizeof(clientAddr);
-	int recvlen = recvfrom(serverSock, buf, sizeof(buf), 0, (LPSOCKADDR)&clientAddr, &clientLen);
+	char buf[800];
+	ZeroMemory(buf, 800);
 
-	if (recvlen > 0)
+	clientLen = sizeof(clientAddr);
+
+	while(1)
 	{
+
+		int recvlen = recvfrom(serverSock, buf, sizeof(buf), 0, (LPSOCKADDR)&clientAddr, &clientLen);
+
+		if (recvlen == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
+		{
+			break;
+		}
+
 		char ipbuf[INET_ADDRSTRLEN];
 
 		Packet IncomingPak;
@@ -538,8 +611,9 @@ void T4Network::ProcessMessage()
 					{
 						if (IncomingPak.has_connect_ack())
 						{
-							printf("Server acknowledged our connection request\r\n");
 							local_index = IncomingPak.connect_ack().index();
+							printf("Server acknowledged our connection request our index is now: %i\r\n",local_index);
+
 							connected = true;
 						}
 					}
@@ -569,8 +643,9 @@ void T4Network::ProcessMessage()
 		{
 			printf("Received some malformed packet from %s:%d\r\n", inet_ntop(AF_INET, &clientAddr.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(clientAddr.sin_port));
 		}
-
 	
+		ZeroMemory(buf, 800);
+		ZeroMemory(&clientAddr, sizeof(clientAddr));
 
 	}
 
@@ -584,14 +659,9 @@ void T4Network::Destroy()
 
 }
 
-
 /* This should only happen to clients! */
 void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 {
-	int playerCount = pSeverSnap.player_size();
-	printf("Server sent us data for %i players\r\n", playerCount);
-
-
 	/* 
 		More code that shouldn't be the way it is, but it'll have to do for the start of things
 	
@@ -615,16 +685,15 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					This presents an interesting problem, if someone else joined before us they could have the index of 1, where we want the server to have it... 
 					It may be best to avoid using 1 and 0 at all and reserve them for the local player and host for indexes, making the server assigned index 2+ only.
 				*/
-
+				
 				if (player_index == local_index)
 				{
 					local_player = true;
 					player_index = 0;
 				}
 			
-				/* If the index is 0 and it wasn't our local player's remote index, chances are it's the host which should have the index of 1 on our end */
 				if (local_player == false && player_index == 0)
-					player_index = 1; 
+					player_index = local_index;
 
 				bool networked_player = false;
 
@@ -685,7 +754,17 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					if (player.fire())
 					{
 						if (pDMPlayer)
+						{
 							pDMPlayer->fire_weapon(0, 0); // this should force a respawn causing the player to be valid in the next frame.
+
+							if (local_player)
+							{
+								fire_set = false;
+								fire_hold = false;
+								fire_release = false;
+							}
+
+						}
 					}
 				
 				}
@@ -871,22 +950,48 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 						Weapon Switch  - Important to do this BEFORE firing as they could have changed weapons!, be sure to update weapon slot first so we switch appropriately
 						Should really find a better way to update the weapon being held this is too inacurate, there's a high chance for desync.
 					*/
-					pDMPlayer->Weapon_slot = player.weapon_slot(); // the current 'slot' or 'weaponid' being held, this is partially what should decide what the weapons around this one should be in terms of +1 or -1
-					pDMPlayer->Weapon_switch_time = player.weapon_switch_time(); // how long to wait before performing the switch
-					pDMPlayer->Weapon_switch = player.weapon_switch(); // actually force the switch -1 or 1 (backwards or forwards in inventory)
-					
 
-					
+					pDMPlayer->Weapon_switch_time = player.weapon_switch_time(); // how long to wait before performing the switch
+
+					if (local_player && player.weapon_slot() != pDMPlayer->Weapon_slot)
+					{
+						
+						if (weapon_switch_attempts == 3)
+						{
+							SwitchWeapon(&pDMPlayer->pWeapon, (player.weapon_slot()) + 1);
+							weapon_switch_attempts = 0;
+						}
+
+						weapon_switch_attempts++;
+
+					}
+
+					if (player.weapon_slot() != pDMPlayer->Weapon_slot && !local_player)
+						SwitchWeapon(&pDMPlayer->pWeapon, (player.weapon_slot()) + 1);
+
 
 					/* Firing Checks  - important to do this AFTER position and other actions */
 					if (player.fire())
+					{
 						pDMPlayer->fire_weapon(0, 0); // again have no idea what the params are for, should determine if they need to be synced.
+					}
 
 					if (player.fire_hold())
+					{
 						pDMPlayer->fire_held(player.fire_hold_time(), 0); // second param isn't synced.
-
+					}
+					
 					if (player.fire_release())
+					{
 						pDMPlayer->fire_release(player.fire_release_time());
+
+						if (local_player)
+						{
+							fire_release = false;
+							fire_set = false;
+							fire_hold = false;
+						}
+					}
 
 					pDMPlayer->pHealth->Current = player.current_health();
 					pDMPlayer->pHealth->Max = player.max_health();
@@ -905,14 +1010,13 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 bool T4Network::AddPlayer(u_long ip, u_short client_port)
 {
-	printf("Adding player\r\n");
-	
+	printf("Attempting to AddPlayer\r\n");
+
 	for (NetworkPlayer* check_player : netplayers)
 	{
-		if (check_player->ipaddr && check_player->port == client_port)
+		if (check_player->ipaddr == ip && check_player->port == client_port)
 		{
 			/* Be sure we resend an Ack, if they dropped the packet they wouldn't have gotten one and it could be why they're trying to connect again */
-
 			Packet ConnectAckPak;
 			ConnectAckPak.set_type(Packet_Type_client_connect);
 
@@ -923,32 +1027,35 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 			ZeroMemory(AckPak, ConnectAckPak.ByteSize());
 
 			ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
-			/*struct sockaddr_in playerAddr;
-			playerAddr.sin_family = AF_INET;
-			playerAddr.sin_port = client_port;
-			playerAddr.sin_addr.s_addr = ip;
-			*/
+	
+			sockaddr_in PlayerAddr;
 
-			int sendlen = sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&clientAddr, sizeof(clientAddr));
+			PlayerAddr.sin_family = AF_INET;
+			PlayerAddr.sin_port = client_port;
+			PlayerAddr.sin_addr.s_addr = ip;
+
+			int sendlen = sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
 
 			if (sendlen == SOCKET_ERROR)
 				printf("WSAError on Send: %08X\r\n", WSAGetLastError());
 
 			char ipbuf[INET_ADDRSTRLEN];
-			printf("Sending data back to %s:%d\r\n", inet_ntop(AF_INET, &clientAddr.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(clientAddr.sin_port));
+			printf("Player already connected, re-sending ACK to %s:%d - PlayerIndex: %i\r\n", inet_ntop(AF_INET, &PlayerAddr.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(PlayerAddr.sin_port),check_player->index);
 
+			ZeroMemory(&PlayerAddr, sizeof(PlayerAddr));
 
 			return false;
 		}
 	}
 
+	printf("Adding player\r\n");
+
 	NetworkPlayer* nPlayer = new NetworkPlayer;
 	nPlayer->ipaddr = ip;
 	nPlayer->port = client_port;
-	nPlayer->index = netplayers.size() + 1;
-
+	
+	nPlayer->index = netplayers.size()+1;
 	netplayers.push_back(nPlayer);
-
 	
 	Packet ConnectAckPak;
 	ConnectAckPak.set_type(Packet_Type_client_connect);
@@ -961,7 +1068,13 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 
 	ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
 
-	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&clientAddr, sizeof(clientAddr));
+	sockaddr_in PlayerAddr;
+
+	PlayerAddr.sin_family = AF_INET;
+	PlayerAddr.sin_port = client_port;
+	PlayerAddr.sin_addr.s_addr = ip;
+
+	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
 
 	netEngine.SpawnPlayer();
 

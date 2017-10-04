@@ -9,6 +9,7 @@ void DebugAction()
 {
 	if (GetAsyncKeyState(VK_LSHIFT))
 	{
+		//SwitchWeapon();
 		//printf("Firing Weapon\r\n");
 		
 		//FireWeapon();
