@@ -399,7 +399,9 @@ void __stdcall FireWeapon(DMPlayer* pDMPlayer, int a1, int a2)
 	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false && pDMPlayer->pHealth->Current > 0.0f)
 	{
 		t4net.fire_set = true;
-		return;
+		
+		if(!t4net.server)
+			return;
 	}
 
 	return pFireWeapon(pDMPlayer, a2, a2);
@@ -417,8 +419,9 @@ int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
 	{
 		t4net.fire_release_time = HeldTime;
 		t4net.fire_release = true;
-	
-		return 0;
+		
+		if(!t4net.server)
+			return 0;
 	}
 
 	return pReleaseFire(pDMPlayer, HeldTime);
