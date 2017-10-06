@@ -9,11 +9,18 @@ void DebugAction()
 {
 	if (GetAsyncKeyState(VK_LSHIFT))
 	{
+//		ApplyDamage();
 		//SwitchWeapon();
 		//printf("Firing Weapon\r\n");
 		
 		//FireWeapon();
 	}
+
+	if (GetAsyncKeyState(VK_RSHIFT))
+	{
+	//	ChangeDeath();
+	}
+
 }
 
 DWORD WINAPI Intialize(LPVOID lpParam)

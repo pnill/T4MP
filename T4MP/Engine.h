@@ -3,7 +3,6 @@
 
 class TurokEngine {
 public:
-	void print_text(char* text);
 	void SetModHooks();
 	DMPlayer *SpawnPlayer();
 	DMPlayer* GetDMPlayer(int index);

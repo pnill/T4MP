@@ -189,9 +189,14 @@ void T4Network::SendSnapShot()
 		player_data->set_walk_forward((player->Walk_forward > 0.0f));
 		player_data->set_walk_left((player->Walk_left > 0.0f));
 		player_data->set_walk_right((player->Walk_right > 0.0f));
-
+	
 		player_data->set_max_health(player->pHealth->Max);
 		player_data->set_current_health(player->pHealth->Current);
+
+		if (player->pHealth->Current == 0.0f)
+		{
+			player_data->set_death_type(death_type);
+		}
 
 		player_data->set_weapon_slot(player->Weapon_slot);
 		player_data->set_weapon_switch_time(player->Weapon_switch_time);
@@ -305,9 +310,16 @@ void T4Network::SendSnapShot()
 			player_data->set_max_health(player->pHealth->Max);
 			player_data->set_current_health(player->pHealth->Current);
 
+			if (player->pHealth->Current == 0.0f)
+			{
+				player_data->set_death_type(update_player->death_type);
+			}
+
 			player_data->set_weapon_slot(player->Weapon_slot);
 			player_data->set_weapon_switch_time(player->Weapon_switch_time);
 			player_data->set_weapon_switch(player->Weapon_switch);
+
+			
 
 
 		}
@@ -696,6 +708,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					player_index = local_index;
 
 				bool networked_player = false;
+				NetworkPlayer* netplayer = NULL;
 
 				if (!local_player)
 				{
@@ -704,6 +717,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 						if (check_player->index == player_index)
 						{
 							networked_player = true;
+							netplayer = check_player;
 							break;
 						}
 					}
@@ -714,6 +728,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 				
 						NetworkPlayer* nPlayer = new NetworkPlayer;
 						nPlayer->index = player_index;
+						netplayer = nPlayer;
 						netEngine.SpawnPlayer();
 
 						netplayers.push_back(nPlayer);
@@ -771,6 +786,22 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 				else 
 				{
 					//If our player is valid lets actually update all their data.
+					pDMPlayer->pHealth->Max = player.max_health();
+
+					if (player.current_health() <= 0.0f)
+					{
+						char* DamagePtr = new char[16];
+						*(float*)DamagePtr = 1.0f;
+
+						pDMPlayer->KillPlayer(0, player.death_type(), DamagePtr);
+						pDMPlayer->pHealth->Current = player.current_health(); 	// don't do this until after we've killed someone if they're dead - may not want to set their health at all if they're dead, but they shouldn't be able to respawn yet.
+
+						delete[] DamagePtr;
+						return;
+					}
+
+
+
 
 					/* Process the Weapon Wheel first */
 					if (player.has_weapons()) // does the packet have a weapon wheel?
@@ -956,7 +987,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					if (local_player && player.weapon_slot() != pDMPlayer->Weapon_slot)
 					{
 						
-						if (weapon_switch_attempts == 3)
+						if (weapon_switch_attempts == 60)
 						{
 							SwitchWeapon(&pDMPlayer->pWeapon, (player.weapon_slot()) + 1);
 							weapon_switch_attempts = 0;
@@ -993,8 +1024,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 						}
 					}
 
-					pDMPlayer->pHealth->Current = player.current_health();
-					pDMPlayer->pHealth->Max = player.max_health();
+					
 
 				}
 			
@@ -1076,7 +1106,7 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 
 	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
 
-	netEngine.SpawnPlayer();
+	nPlayer->PlayerObject = netEngine.SpawnPlayer();
 
 
 	return true;

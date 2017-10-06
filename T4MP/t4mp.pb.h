@@ -1154,6 +1154,12 @@ class ServerSnap_PlayerData : public ::google::protobuf::Message /* @@protoc_ins
   ::google::protobuf::int32 index() const;
   void set_index(::google::protobuf::int32 value);
 
+  // int32 death_type = 24;
+  void clear_death_type();
+  static const int kDeathTypeFieldNumber = 24;
+  ::google::protobuf::int32 death_type() const;
+  void set_death_type(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:ServerSnap.PlayerData)
  private:
 
@@ -1181,6 +1187,7 @@ class ServerSnap_PlayerData : public ::google::protobuf::Message /* @@protoc_ins
   float weapon_switch_time_;
   ::google::protobuf::int32 weapon_slot_;
   ::google::protobuf::int32 index_;
+  ::google::protobuf::int32 death_type_;
   mutable int _cached_size_;
   friend struct protobuf_t4mp_2eproto::TableStruct;
 };
@@ -2623,6 +2630,20 @@ inline void ServerSnap_PlayerData::set_index(::google::protobuf::int32 value) {
   
   index_ = value;
   // @@protoc_insertion_point(field_set:ServerSnap.PlayerData.index)
+}
+
+// int32 death_type = 24;
+inline void ServerSnap_PlayerData::clear_death_type() {
+  death_type_ = 0;
+}
+inline ::google::protobuf::int32 ServerSnap_PlayerData::death_type() const {
+  // @@protoc_insertion_point(field_get:ServerSnap.PlayerData.death_type)
+  return death_type_;
+}
+inline void ServerSnap_PlayerData::set_death_type(::google::protobuf::int32 value) {
+  
+  death_type_ = value;
+  // @@protoc_insertion_point(field_set:ServerSnap.PlayerData.death_type)
 }
 
 // -------------------------------------------------------------------

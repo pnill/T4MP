@@ -380,7 +380,7 @@ public:
 	virtual void Function273(); //
 	virtual void Function274(); //
 	virtual void Function275(); //
-	virtual void Function276(); //
+	virtual void KillPlayer(int Unk1, int DeathType, void* DamagePtr); //
 	virtual void Function277(); //
 
 	char pad_0x0004[0x18]; //0x0004

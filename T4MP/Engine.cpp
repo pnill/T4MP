@@ -237,33 +237,18 @@ tlevel_load_actor plevel_load_actor;
 
 int __stdcall level_load_actor(void* thisptr, char* a2, int a3, int a4)
 {
-	/*char text_out[2000];
-	memset(text_out, 0x00, 2000);
-	sprintf(text_out, "thisptr: %p, a2: %s, a3: %08X, a4: %08X", thisptr, a2, a3, a4);
-
-	FILE* fh = fopen("level_load.txt", "a+");
-	fwrite(text_out, strlen(text_out), 1, fh);
-	fclose(fh);
-	*/
 	return plevel_load_actor(thisptr, a2, a3, a4);
 }
 
 typedef int(__stdcall *tconstruct_actor)(void* thisptr, char* object_name, char* object_path);
 tconstruct_actor pconstruct_actor;
 
-//int i = 0;
 int __stdcall construct_actor(void* thisptr, char* object_name, char* object_path)
 {
-	/*
-	FILE* fh = fopen("construct_actor.txt", "a+");
 
-	char text_out[2000];
-	memset(text_out, 0x00, 2000);
-	sprintf(text_out, "this: %p, object_name: %s, object_path: %s\r\n", thisptr, object_name, object_path);
-	fwrite(text_out, strlen(text_out), 1, fh);
-	fclose(fh);*/
 
 	int ret = pconstruct_actor(thisptr, object_name, object_path);
+
 	if (!strcmp(object_name, "DMPlayer"))
 	{
 		nPlayerPTR = (DWORD)ret;
@@ -336,11 +321,6 @@ void __stdcall player_death4(void* thisptr, float a2)
 	if (thisptr == 0)
 		return;
 
-	/*
-	  .text:004D916D mov     ecx, [esi+1B20h]
-	  .text:004D9173 test    byte ptr [ecx+30h], 40h
-	*/
-
 	if (!*(DWORD*)((BYTE*)thisptr + 0x1B20))
 		return;
 
@@ -370,37 +350,6 @@ int __stdcall spawn_object_engine(void* thisptr, int a2, char* object_name, char
 {
 	
 	int ret = pspawn_object(thisptr, a2, object_name, object_path, pos_struct, a6);
-
-	/*if(!strcmp(object_path,"y:\\Data\\Actors\\EnemyWeapons\\SpikedMine\\SpikedMine.atr"))
-	{
-			char *spawn_path = new char[255];
-			ZeroMemory(spawn_path, 255);
-			//memset(spawn_path, 0x00, 255);
-
-			sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr")+1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
-			
-			char *spawn_name = new char[20];
-			ZeroMemory(spawn_name, 20);
-			//memset(spawn_name, 0x00, 20);
-
-			sprintf_s(spawn_name, strlen("DMPlayer")+1, "%s", "DMPlayer");
-
-			Vector3 npos_struct = *pos_struct;
-			npos_struct.x += 5.0f;
-			npos_struct.y += 5.0f;
-			npos_struct.z += 5.0f;
-
-			DWORD dwOld;
-			VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
-
-			BYTE OrigByte = *(BYTE*)0x004DAD49;
-			*(BYTE*)0x004DAD49 = 0xEB;
-
-			DWORD nPlayerPTR = (DWORD)pspawn_object(thisptr, 0, spawn_name, spawn_path, &npos_struct, 0);
-
-			*(BYTE*)0x004DAD49 = OrigByte;
-	}*/
-
 	
 	return ret;
 }
@@ -421,16 +370,6 @@ int __stdcall load_history(void* thisptr, char* hist_file)
 
 	return ret;
 }
-
-
-int __cdecl call_print_text(int obj, int text, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, unsigned int a12)
-{
-	typedef int(__cdecl *print_text)(int obj, int text, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, unsigned int a12);
-	print_text pprint_text = (print_text)((char*)0x4EA850);
-
-	return pprint_text(obj, text, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
-}
-
 DMPlayer* TurokEngine::GetDMPlayer(int index)
 {
 	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
@@ -457,7 +396,7 @@ tFireWeapon pFireWeapon;
 void __stdcall FireWeapon(DMPlayer* pDMPlayer, int a1, int a2)
 {
 	TurokEngine tengine;
-	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false)
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false && pDMPlayer->pHealth->Current > 0.0f)
 	{
 		t4net.fire_set = true;
 		return;
@@ -474,7 +413,7 @@ int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
 	TurokEngine tengine;
 
 
-	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_release == false)
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_release == false && pDMPlayer->pHealth->Current > 0.0f)
 	{
 		t4net.fire_release_time = HeldTime;
 		t4net.fire_release = true;
@@ -501,22 +440,113 @@ int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
 	return pHoldFire(pDMPlayer, HeldTime, a2);
 }
 
+typedef void(__thiscall *tApplyDamage)(void* pThis, float* Damage_Amount, int Unk);
+//tApplyDamage pApplyDamage = (tApplyDamage)(0x0051E570);
+tApplyDamage pApplyDamage = (tApplyDamage)(0x004D7A50);
+
 typedef int(__thiscall *tWeaponCheck)(void* Pthis, int WeaponID, int Unk);
 tWeaponCheck pWeaponCheck = (tWeaponCheck)(0x004E3720);
 
 typedef int(__thiscall *tWeaponSwitch)(void* Pthis, int WeaponID, int Unk);
 tWeaponSwitch pWeaponSwitch = (tWeaponSwitch)(0x004E3AF0);
 
-
 void SwitchWeapon(void* WeaponPointer, int WeaponID)
 {
-	
+
 	if (pWeaponCheck(WeaponPointer, WeaponID, 0))
 	{
 		pWeaponSwitch(WeaponPointer, WeaponID, 0);
 	}
 
 }
+
+
+//Detouring this has proven to be a bitch so it's code-caved instead.
+DWORD DamagePlayer_Ret = 0x00;
+DWORD DamagedPlayer = 0x00;
+__declspec(naked) void DamagePlayer() 
+{
+	__asm {
+		pop DamagePlayer_Ret
+
+		PUSHAD
+		PUSHFD
+	
+	}
+
+	if (!t4net.server)
+	{
+		__asm 
+		{
+			POPFD
+			POPAD
+			or dword ptr[ecx+0x28],2
+			push DamagePlayer_Ret
+			ret
+		}
+	}
+
+	__asm
+	{
+		POPFD
+		POPAD
+		or dword ptr[ecx+0x28],2
+		mov eax, 0x0051E570
+		jmp eax
+		push DamagePlayer_Ret
+		ret
+	}
+
+}
+
+
+DWORD KillPlayer_Ret;
+DWORD KillPlayer_Ret2;
+DMPlayer* KilledPlayer = 0x00;
+int death_type = 0;
+
+__declspec(naked) void KillPlayer()
+{
+	__asm {
+		pop KillPlayer_Ret
+		PUSHAD
+		PUSHFD
+		mov KilledPlayer, ecx
+		mov eax, [esp+0x2C]
+		mov death_type, eax
+		
+	}
+
+	if (t4net.server)
+	{
+		TurokEngine tengine;
+		if (tengine.GetDMPlayer(0) == KilledPlayer)
+		{
+			t4net.death_type = death_type;
+		}
+		else
+		{
+			for (NetworkPlayer* player : t4net.netplayers)
+			{
+				if (player->PlayerObject == KilledPlayer)
+					player->death_type = death_type;
+			}
+		}
+	}
+
+		__asm
+		{
+			POPFD
+			POPAD
+			push 0x0FFFFFFFF
+			push 0x0062254B
+			push KillPlayer_Ret
+			ret
+		}
+}
+
+
+
 
 void TurokEngine::UnCrouch(DMPlayer* thisptr)
 {
@@ -571,12 +601,6 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	return nPlayer;
 }
 
-void TurokEngine::print_text(char* text)
-{
-	HMODULE T4Base = GetModuleHandle(L"Turok4.exe");
-	int object_ptr = *(int*)((char*)T4Base + 0x2B52E4);
-	call_print_text(object_ptr, (int)text, 0x41700000, 0x3F800000, 4, 0x3EFFDDDE, 0x3EB25B6B, 0, 2, 1, 1, 2);
-}
 
 void TurokEngine::SetModHooks()
 {
@@ -642,10 +666,14 @@ void TurokEngine::SetModHooks()
 	
 	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
+	
+
 	Codecave(0x0050F850, CameraFuncLoop1, 1);
 	Codecave(0x0050F8F0, CameraFuncLoop2, 1);
 	Codecave(0x004EE7F0, screen_effect_osd, 1);
+	Codecave(0x004E08B0, DamagePlayer, 4);
+	Codecave(0x004DE1B0, KillPlayer, 2);
 
-    t4net.Initalize();
+	t4net.Initalize();
 	
 }

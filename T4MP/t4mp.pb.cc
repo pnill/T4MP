@@ -188,6 +188,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap_PlayerData, weapon_slot_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap_PlayerData, weapons_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap_PlayerData, index_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap_PlayerData, death_type_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -201,7 +202,7 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_ATTR
   { 15, -1, sizeof(PlayerSnap)},
   { 39, -1, sizeof(ServerSnap_PlayerData_WeaponWheel)},
   { 83, -1, sizeof(ServerSnap_PlayerData)},
-  { 111, -1, sizeof(ServerSnap)},
+  { 112, -1, sizeof(ServerSnap)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -284,9 +285,9 @@ void AddDescriptorsImpl() {
       "hold\030\r \001(\010\022\026\n\016Fire_hold_time\030\016 \001(\002\022\024\n\014Fi"
       "re_release\030\017 \001(\010\022\031\n\021Fire_release_time\030\020 "
       "\001(\002\022\025\n\rWeapon_switch\030\021 \001(\005\022\032\n\022Weapon_swi"
-      "tch_time\030\022 \001(\002\022\023\n\013Weapon_slot\030\023 \001(\005\"\351\013\n\n"
+      "tch_time\030\022 \001(\002\022\023\n\013Weapon_slot\030\023 \001(\005\"\375\013\n\n"
       "ServerSnap\022&\n\006player\030\001 \003(\0132\026.ServerSnap."
-      "PlayerData\032\262\013\n\nPlayerData\022\t\n\001X\030\001 \001(\002\022\t\n\001"
+      "PlayerData\032\306\013\n\nPlayerData\022\t\n\001X\030\001 \001(\002\022\t\n\001"
       "Y\030\002 \001(\002\022\t\n\001Z\030\003 \001(\002\022\r\n\005ViewX\030\004 \001(\002\022\r\n\005Vie"
       "wY\030\005 \001(\002\022\024\n\014Walk_forward\030\006 \001(\010\022\025\n\rWalk_b"
       "ackward\030\007 \001(\010\022\021\n\tWalk_left\030\010 \001(\010\022\022\n\nWalk"
@@ -298,34 +299,35 @@ void AddDescriptorsImpl() {
       "on_switch\030\023 \001(\005\022\032\n\022Weapon_switch_time\030\024 "
       "\001(\002\022\023\n\013Weapon_slot\030\025 \001(\005\0223\n\007weapons\030\026 \001("
       "\0132\".ServerSnap.PlayerData.WeaponWheel\022\r\n"
-      "\005index\030\027 \001(\005\032\320\007\n\013WeaponWheel\022\020\n\010bWarClub"
-      "\030\001 \001(\010\022\020\n\010bHas_Bow\030\002 \001(\010\022\027\n\017bow_Normal_A"
-      "mmo\030\003 \001(\005\022\032\n\022bow_Explosive_Ammo\030\004 \001(\005\022\027\n"
-      "\017bow_Poison_Ammo\030\005 \001(\005\022\023\n\013bHas_TekBow\030\006 "
-      "\001(\010\022\031\n\021TekBow_NormalAmmo\030\007 \001(\005\022\034\n\024TekBow"
-      "_ExplosiveAmmo\030\010 \001(\005\022\031\n\021TekBow_PosionAmm"
-      "o\030\t \001(\005\022\031\n\021bHas_SpikeGrenade\030\n \001(\010\022\031\n\021Sp"
-      "ikeGrenade_Ammo\030\013 \001(\005\022\023\n\013bHas_Pistol\030\014 \001"
-      "(\010\022\023\n\013Pistol_Ammo\030\r \001(\005\022\024\n\014bHas_ShotGun\030"
-      "\016 \001(\010\022\024\n\014ShotGun_Ammo\030\017 \001(\005\022\026\n\016bHas_Flec"
-      "heete\030\020 \001(\010\022\026\n\016Fleechete_Ammo\030\021 \001(\005\022\024\n\014M"
-      "iniGun_Ammo\030\022 \001(\005\022\033\n\023bHas_RocketLauncher"
-      "\030\023 \001(\010\022\024\n\014Rocket_Ammo1\030\024 \001(\005\022\024\n\014Rocket_A"
-      "mmo2\030\025 \001(\005\022\024\n\014Rocket_Ammo3\030\026 \001(\005\022\031\n\021bHas"
-      "_PlasmaCannon\030\027 \001(\010\022\024\n\014Plasma_Ammo1\030\030 \001("
-      "\005\022\024\n\014Plasma_Ammo2\030\031 \001(\005\022\024\n\014Plasma_Ammo3\030"
-      "\032 \001(\005\022\031\n\021bHas_FlameThrower\030\033 \001(\010\022\031\n\021Flam"
-      "eThrower_Ammo\030\034 \001(\005\022\027\n\017bHas_SpiderMine\030\035"
-      " \001(\010\022\027\n\017SpiderMine_Ammo\030\036 \001(\005\022\027\n\017bHas_Gr"
-      "avityGun\030\037 \001(\010\022\027\n\017GravityGun_Ammo\030  \001(\005\022"
-      "\030\n\020GravityGun_Ammo2\030! \001(\005\022\027\n\017bHas_DarkMa"
-      "tter\030\" \001(\010\022\027\n\017DarkMatter_Ammo\030# \001(\005\022\025\n\rb"
-      "Has_CrossBow\030$ \001(\010\022\034\n\024CrossBow_Normal_Am"
-      "mo\030% \001(\005\022\037\n\027CrossBow_Explosive_Ammo\030& \001("
-      "\005\022\034\n\024CrossBow_Poison_Ammo\030\' \001(\005b\006proto3"
+      "\005index\030\027 \001(\005\022\022\n\ndeath_type\030\030 \001(\005\032\320\007\n\013Wea"
+      "ponWheel\022\020\n\010bWarClub\030\001 \001(\010\022\020\n\010bHas_Bow\030\002"
+      " \001(\010\022\027\n\017bow_Normal_Ammo\030\003 \001(\005\022\032\n\022bow_Exp"
+      "losive_Ammo\030\004 \001(\005\022\027\n\017bow_Poison_Ammo\030\005 \001"
+      "(\005\022\023\n\013bHas_TekBow\030\006 \001(\010\022\031\n\021TekBow_Normal"
+      "Ammo\030\007 \001(\005\022\034\n\024TekBow_ExplosiveAmmo\030\010 \001(\005"
+      "\022\031\n\021TekBow_PosionAmmo\030\t \001(\005\022\031\n\021bHas_Spik"
+      "eGrenade\030\n \001(\010\022\031\n\021SpikeGrenade_Ammo\030\013 \001("
+      "\005\022\023\n\013bHas_Pistol\030\014 \001(\010\022\023\n\013Pistol_Ammo\030\r "
+      "\001(\005\022\024\n\014bHas_ShotGun\030\016 \001(\010\022\024\n\014ShotGun_Amm"
+      "o\030\017 \001(\005\022\026\n\016bHas_Flecheete\030\020 \001(\010\022\026\n\016Fleec"
+      "hete_Ammo\030\021 \001(\005\022\024\n\014MiniGun_Ammo\030\022 \001(\005\022\033\n"
+      "\023bHas_RocketLauncher\030\023 \001(\010\022\024\n\014Rocket_Amm"
+      "o1\030\024 \001(\005\022\024\n\014Rocket_Ammo2\030\025 \001(\005\022\024\n\014Rocket"
+      "_Ammo3\030\026 \001(\005\022\031\n\021bHas_PlasmaCannon\030\027 \001(\010\022"
+      "\024\n\014Plasma_Ammo1\030\030 \001(\005\022\024\n\014Plasma_Ammo2\030\031 "
+      "\001(\005\022\024\n\014Plasma_Ammo3\030\032 \001(\005\022\031\n\021bHas_FlameT"
+      "hrower\030\033 \001(\010\022\031\n\021FlameThrower_Ammo\030\034 \001(\005\022"
+      "\027\n\017bHas_SpiderMine\030\035 \001(\010\022\027\n\017SpiderMine_A"
+      "mmo\030\036 \001(\005\022\027\n\017bHas_GravityGun\030\037 \001(\010\022\027\n\017Gr"
+      "avityGun_Ammo\030  \001(\005\022\030\n\020GravityGun_Ammo2\030"
+      "! \001(\005\022\027\n\017bHas_DarkMatter\030\" \001(\010\022\027\n\017DarkMa"
+      "tter_Ammo\030# \001(\005\022\025\n\rbHas_CrossBow\030$ \001(\010\022\034"
+      "\n\024CrossBow_Normal_Ammo\030% \001(\005\022\037\n\027CrossBow"
+      "_Explosive_Ammo\030& \001(\005\022\034\n\024CrossBow_Poison"
+      "_Ammo\030\' \001(\005b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2159);
+      descriptor, 2179);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "t4mp.proto", &protobuf_RegisterTypes);
 }
@@ -4427,6 +4429,7 @@ const int ServerSnap_PlayerData::kWeaponSwitchTimeFieldNumber;
 const int ServerSnap_PlayerData::kWeaponSlotFieldNumber;
 const int ServerSnap_PlayerData::kWeaponsFieldNumber;
 const int ServerSnap_PlayerData::kIndexFieldNumber;
+const int ServerSnap_PlayerData::kDeathTypeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ServerSnap_PlayerData::ServerSnap_PlayerData()
@@ -4448,15 +4451,15 @@ ServerSnap_PlayerData::ServerSnap_PlayerData(const ServerSnap_PlayerData& from)
     weapons_ = NULL;
   }
   ::memcpy(&x_, &from.x_,
-    static_cast<size_t>(reinterpret_cast<char*>(&index_) -
-    reinterpret_cast<char*>(&x_)) + sizeof(index_));
+    static_cast<size_t>(reinterpret_cast<char*>(&death_type_) -
+    reinterpret_cast<char*>(&x_)) + sizeof(death_type_));
   // @@protoc_insertion_point(copy_constructor:ServerSnap.PlayerData)
 }
 
 void ServerSnap_PlayerData::SharedCtor() {
   ::memset(&weapons_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&index_) -
-      reinterpret_cast<char*>(&weapons_)) + sizeof(index_));
+      reinterpret_cast<char*>(&death_type_) -
+      reinterpret_cast<char*>(&weapons_)) + sizeof(death_type_));
   _cached_size_ = 0;
 }
 
@@ -4503,8 +4506,8 @@ void ServerSnap_PlayerData::Clear() {
   }
   weapons_ = NULL;
   ::memset(&x_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&index_) -
-      reinterpret_cast<char*>(&x_)) + sizeof(index_));
+      reinterpret_cast<char*>(&death_type_) -
+      reinterpret_cast<char*>(&x_)) + sizeof(death_type_));
   _internal_metadata_.Clear();
 }
 
@@ -4838,6 +4841,20 @@ bool ServerSnap_PlayerData::MergePartialFromCodedStream(
         break;
       }
 
+      // int32 death_type = 24;
+      case 24: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(192u /* 192 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &death_type_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -4980,6 +4997,11 @@ void ServerSnap_PlayerData::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(23, this->index(), output);
   }
 
+  // int32 death_type = 24;
+  if (this->death_type() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(24, this->death_type(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -5109,6 +5131,11 @@ void ServerSnap_PlayerData::SerializeWithCachedSizes(
   // int32 index = 23;
   if (this->index() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(23, this->index(), target);
+  }
+
+  // int32 death_type = 24;
+  if (this->death_type() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(24, this->death_type(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -5251,6 +5278,13 @@ size_t ServerSnap_PlayerData::ByteSizeLong() const {
         this->index());
   }
 
+  // int32 death_type = 24;
+  if (this->death_type() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->death_type());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -5349,6 +5383,9 @@ void ServerSnap_PlayerData::MergeFrom(const ServerSnap_PlayerData& from) {
   if (from.index() != 0) {
     set_index(from.index());
   }
+  if (from.death_type() != 0) {
+    set_death_type(from.death_type());
+  }
 }
 
 void ServerSnap_PlayerData::CopyFrom(const ::google::protobuf::Message& from) {
@@ -5398,6 +5435,7 @@ void ServerSnap_PlayerData::InternalSwap(ServerSnap_PlayerData* other) {
   swap(weapon_switch_time_, other->weapon_switch_time_);
   swap(weapon_slot_, other->weapon_slot_);
   swap(index_, other->index_);
+  swap(death_type_, other->death_type_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
@@ -5756,6 +5794,20 @@ void ServerSnap_PlayerData::set_index(::google::protobuf::int32 value) {
   
   index_ = value;
   // @@protoc_insertion_point(field_set:ServerSnap.PlayerData.index)
+}
+
+// int32 death_type = 24;
+void ServerSnap_PlayerData::clear_death_type() {
+  death_type_ = 0;
+}
+::google::protobuf::int32 ServerSnap_PlayerData::death_type() const {
+  // @@protoc_insertion_point(field_get:ServerSnap.PlayerData.death_type)
+  return death_type_;
+}
+void ServerSnap_PlayerData::set_death_type(::google::protobuf::int32 value) {
+  
+  death_type_ = value;
+  // @@protoc_insertion_point(field_set:ServerSnap.PlayerData.death_type)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

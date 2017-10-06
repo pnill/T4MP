@@ -21,7 +21,11 @@ class NetworkPlayer
 		bool fire_hold = false;
 		float fire_hold_time = 0.0f;
 		bool fire_release = false;
-		bool fire_release_time = 0.0f;
+		float fire_release_time = 0.0f;
+		int death_type = 0;
+		bool server_call_death = false;
+
+		DMPlayer* PlayerObject = NULL;
 };
 
 class T4Network
@@ -33,21 +37,24 @@ class T4Network
 	SOCKET serverSock = INVALID_SOCKET;
 	struct sockaddr_in serverAddr;
 	struct sockaddr_in clientAddr;
-	std::vector<NetworkPlayer*> netplayers;
 	LPCSTR server_ip = new char[22];
 	
 	u_short port = 27004;
 	bool AddPlayer(u_long, u_short);
 
 public:
+	std::vector<NetworkPlayer*> netplayers;
+
 	bool fire_set = false;
 	bool fire_hold = false;
 	bool fire_release = false;
 	float fire_hold_time = 0.0f;
 	float fire_release_time = 0.0f;
+	int death_type = 0;
 
 	bool server = false;
 	bool connected = false;
+	bool server_call_death = false;
 
 	void Initalize();
 	void ConnectToServer();
