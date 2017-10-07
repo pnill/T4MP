@@ -6,8 +6,9 @@
 #include <stdio.h>
 
 T4Network t4net;
+TurokEngine tengine;
 
-
+bool spawned = false;
 DWORD screen_effect_ret = 0x00000000; 
 __declspec(naked) void screen_effect_osd() // Fix crash when new player is taking damage, since we don't have a camera for them ecx here will be null we need to account for that.
 {
@@ -128,6 +129,7 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 
 		POPFD
 		POPAD
+		//mov [edi+0x1E],1
 		push 0x0050F87E // else push a different return value to the stack and force the loop onto the next entry.
 		ret
 
@@ -228,6 +230,20 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 			t4net.ConnectToServer();
 	}
 
+	if (GetAsyncKeyState(VK_LSHIFT))
+	{
+		if (spawned == false)
+		{
+			tengine.SpawnPlayer();
+			spawned = true;
+		}
+		//		ApplyDamage();
+		//SwitchWeapon();
+		//printf("Firing Weapon\r\n");
+
+		//FireWeapon();
+	}
+
 	return;
 }
 
@@ -277,7 +293,9 @@ tpause_menu ppause_menu;
 char __stdcall pause_menu(void* thisptr, int a2)
 {
 	if (thisptr == 0)
-		return 1;
+		return 0;
+
+
 	return ppause_menu(thisptr, a2);
 }
 
@@ -297,9 +315,7 @@ tplayer_death2 pplayer_death2;
 
 void __stdcall player_death2(void* thisptr, int a2)
 {
-	if (thisptr == 0)
-		return;
-	return pplayer_death2(thisptr, a2);
+	return; // this will disable the indicator for the death helm, but trying to return normally crashes so we'll accept it for now.
 }
 
 typedef char(__stdcall *tplayer_death3)(void* thisptr, int a2);
@@ -584,6 +600,102 @@ BOOL __stdcall IsDead(DMPlayer* pDMPlayer)
 
 }
 
+typedef int(__stdcall *tPickupCrash)(void* pScreenPtr, int a2);
+tPickupCrash pPickupCrash;
+
+/* Fixes jump boots pickup, disables it from attempting to add hud for players other than the local one. */
+int __stdcall PickupCrash(void* pScreenPtr, int a2)
+{
+	if (!pScreenPtr)
+		return a2;
+
+	return pPickupCrash(pScreenPtr, a2);
+}
+
+
+/* The rest of these are not necessarily related to pickup, just OSD in general */
+typedef int(__stdcall *tPickupCrash2)(void* pScreenPtr, int a2);
+tPickupCrash2 pPickupCrash2;
+
+int __stdcall PickupCrash2(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash2(pScreen, a2);
+}
+
+typedef int(__stdcall *tPickupCrash3)(void* pScreenPtr, int a2);
+tPickupCrash3 pPickupCrash3;
+
+int __stdcall PickupCrash3(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash3(pScreen, a2);
+}
+
+
+typedef int(__stdcall *tPickupCrash4)(void* pScreenPtr, int a2);
+tPickupCrash3 pPickupCrash4;
+
+int __stdcall PickupCrash4(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash4(pScreen, a2);
+}
+
+
+typedef int(__stdcall *tPickupCrash5)(void* pScreenPtr, int a2);
+tPickupCrash5 pPickupCrash5;
+
+int __stdcall PickupCrash5(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash5(pScreen, a2);
+}
+
+typedef int(__stdcall *tPickupCrash6)(void* pScreenPtr, int a2);
+tPickupCrash6 pPickupCrash6;
+
+int __stdcall PickupCrash6(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash6(pScreen, a2);
+}
+
+
+typedef int(__stdcall *tPickupCrash7)(void* pScreenPtr, int a2);
+tPickupCrash7 pPickupCrash7;
+
+int __stdcall PickupCrash7(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash7(pScreen, a2);
+}
+
+typedef int(__stdcall *tPickupCrash8)(void* pScreenPtr, int a2);
+tPickupCrash8 pPickupCrash8;
+
+int __stdcall PickupCrash8(void* pScreen, int a2)
+{
+	if (!pScreen)
+		return a2;
+
+	return pPickupCrash8(pScreen, a2);
+}
+
+
+
 //In the future this will include the model and such, we also need to be sure players are spawning at specific positions, or transfer positions from server snapshots.
 //It's probably best to hook the spawnpoint routine so we can sync spawning.
 
@@ -595,8 +707,8 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	char *spawn_path = new char[255];
 	ZeroMemory(spawn_path, 255);
 
-	sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
-
+	//sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
+	sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr");
 	char *spawn_name = new char[20];
 	ZeroMemory(spawn_name, 20);
 
@@ -649,7 +761,7 @@ void TurokEngine::SetModHooks()
 
 	VirtualProtect(pplayer_death, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
-	pplayer_death2 = (tplayer_death2)DetourClassFunc((BYTE*)0x4EE850, (BYTE*)player_death2, 8);
+	pplayer_death2 = (tplayer_death2)DetourClassFunc((BYTE*)0x4EE850, (BYTE*)player_death2, 14);
 
 	VirtualProtect(player_death2, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
@@ -688,6 +800,38 @@ void TurokEngine::SetModHooks()
 	pIsDead = (tIsDead)DetourClassFunc((BYTE*)0x00486110, (BYTE*)IsDead, 10);
 	
 	VirtualProtect(pIsDead, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	
+	pPickupCrash = (tPickupCrash)DetourClassFunc((BYTE*)0x004EE7C0, (BYTE*)PickupCrash, 12);
+
+	VirtualProtect(pPickupCrash, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pPickupCrash2 = (tPickupCrash2)DetourClassFunc((BYTE*)0x4EE820, (BYTE*)PickupCrash2, 14);
+
+	VirtualProtect(pPickupCrash2, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pPickupCrash3 = (tPickupCrash3)DetourClassFunc((BYTE*)0x4EE9C0, (BYTE*)PickupCrash3, 10);
+
+	VirtualProtect(pPickupCrash3, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	
+	pPickupCrash4 = (tPickupCrash4)DetourClassFunc((BYTE*)0x4EE970, (BYTE*)PickupCrash4, 10);
+
+	VirtualProtect(pPickupCrash4, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	
+	pPickupCrash5 = (tPickupCrash5)DetourClassFunc((BYTE*)0x4EE920, (BYTE*)PickupCrash5, 10);
+
+	VirtualProtect(pPickupCrash5, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	
+	pPickupCrash6 = (tPickupCrash6)DetourClassFunc((BYTE*)0x4EE8D0, (BYTE*)PickupCrash6, 10);
+
+	VirtualProtect(pPickupCrash6, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pPickupCrash7 = (tPickupCrash7)DetourClassFunc((BYTE*)0x4EEA40, (BYTE*)PickupCrash7, 10);
+
+	VirtualProtect(pPickupCrash7, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pPickupCrash8 = (tPickupCrash8)DetourClassFunc((BYTE*)0x4EEA10, (BYTE*)PickupCrash8, 10);
+
+	VirtualProtect(pPickupCrash8, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 
 	Codecave(0x0050F850, CameraFuncLoop1, 1);
