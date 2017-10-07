@@ -444,6 +444,12 @@ void T4Network::SendPlayerSnapShot()
 			player_snap->set_fire(true);
 		}
 
+		if (fire_hold)
+		{
+			player_snap->set_fire_hold(true);
+			player_snap->set_fire_hold_time(fire_hold_time);
+		}
+
 		if (fire_release)
 		{
 			player_snap->set_fire_release_time(fire_release_time);
@@ -534,19 +540,23 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		
 		if (pPlayerSnap.fire())
 		{
+			//printf("Player Fired\r\n");
 			pPlayer->fire_weapon(0, 0);
 			pnet_player->fire_set = true;
 		}
 	
 		if (pPlayerSnap.fire_hold())
 		{
+			//printf("Player is holding fire\r\n");
 			pPlayer->fire_held(pPlayerSnap.fire_hold_time(), 0);
 			pnet_player->fire_hold = true;
 			pnet_player->fire_hold_time = pPlayerSnap.fire_hold_time();
+		
 		}
 
 		if (pPlayerSnap.fire_release())
 		{
+			//printf("Player released fire\r\n");
 			pPlayer->fire_release(pPlayerSnap.fire_release_time());
 			pnet_player->fire_release = true;
 			pnet_player->fire_release_time = pPlayerSnap.fire_release_time();
@@ -790,18 +800,20 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 					if (player.current_health() <= 0.0f)
 					{
-						char* DamagePtr = new char[16];
+						char* DamagePtr = new char[500];
+						ZeroMemory(DamagePtr, 500);
 						*(float*)DamagePtr = 1.0f;
+						pDMPlayer->pHealth->Current = player.current_health();
 
 						pDMPlayer->KillPlayer(0, player.death_type(), DamagePtr);
-						pDMPlayer->pHealth->Current = player.current_health(); 	// don't do this until after we've killed someone if they're dead - may not want to set their health at all if they're dead, but they shouldn't be able to respawn yet.
 
 						delete[] DamagePtr;
-						return;
+						break;
 					}
-
-
-
+					else 
+					{
+						pDMPlayer->pHealth->Current = player.current_health();
+					}
 
 					/* Process the Weapon Wheel first */
 					if (player.has_weapons()) // does the packet have a weapon wheel?
@@ -1004,17 +1016,21 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					/* Firing Checks  - important to do this AFTER position and other actions */
 					if (player.fire())
 					{
-						pDMPlayer->fire_weapon(0, 0); // again have no idea what the params are for, should determine if they need to be synced.
+						if(!local_player)
+							pDMPlayer->fire_weapon(0, 0); // again have no idea what the params are for, should determine if they need to be synced.
 					}
 
 					if (player.fire_hold())
 					{
-						pDMPlayer->fire_held(player.fire_hold_time(), 0); // second param isn't synced.
+						if(!local_player)
+							pDMPlayer->fire_held(player.fire_hold_time(), 0); // second param isn't synced.
 					}
 					
 					if (player.fire_release())
 					{
-						pDMPlayer->fire_release(player.fire_release_time());
+
+						if(!local_player)
+							pDMPlayer->fire_release(player.fire_release_time());
 
 						if (local_player)
 						{

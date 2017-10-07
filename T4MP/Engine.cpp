@@ -396,12 +396,13 @@ tFireWeapon pFireWeapon;
 void __stdcall FireWeapon(DMPlayer* pDMPlayer, int a1, int a2)
 {
 	TurokEngine tengine;
-	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false && pDMPlayer->pHealth->Current > 0.0f)
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_set == false )//&& pDMPlayer->pHealth->Current > 0.0f)
 	{
 		t4net.fire_set = true;
-		
-		if(!t4net.server)
-			return;
+
+	//	if (!t4net.server)
+	//		return;
+	
 	}
 
 	return pFireWeapon(pDMPlayer, a2, a2);
@@ -414,14 +415,13 @@ int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
 {
 	TurokEngine tengine;
 
-
-	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_release == false && pDMPlayer->pHealth->Current > 0.0f)
+	if (pDMPlayer == tengine.GetDMPlayer(0) && t4net.fire_release == false )//&& pDMPlayer->pHealth->Current > 0.0f)
 	{
 		t4net.fire_release_time = HeldTime;
 		t4net.fire_release = true;
 		
-		if(!t4net.server)
-			return 0;
+	//	if(!t4net.server)
+	//		return 0;
 	}
 
 	return pReleaseFire(pDMPlayer, HeldTime);
@@ -433,7 +433,6 @@ tHoldFire pHoldFire;
 int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
 {
 	TurokEngine tengine;
-
 	if (pDMPlayer == tengine.GetDMPlayer(0))
 	{
 		t4net.fire_hold_time = HeldTime;
@@ -484,6 +483,10 @@ __declspec(naked) void DamagePlayer()
 			POPFD
 			POPAD
 			or dword ptr[ecx+0x28],2
+			mov eax, [esp + 4]
+			mov [eax], 0x00000000
+			mov eax, 0x0051E570
+			jmp eax
 			push DamagePlayer_Ret
 			ret
 		}
@@ -493,6 +496,7 @@ __declspec(naked) void DamagePlayer()
 	{
 		POPFD
 		POPAD
+
 		or dword ptr[ecx+0x28],2
 		mov eax, 0x0051E570
 		jmp eax
@@ -567,6 +571,18 @@ void TurokEngine::UnCrouch(DMPlayer* thisptr)
 
 }
 
+typedef BOOL(__stdcall *tIsDead)(DMPlayer* pDMPlayer);
+tIsDead pIsDead;
+
+BOOL __stdcall IsDead(DMPlayer* pDMPlayer)
+{
+	
+	if (t4net.server)
+		return pIsDead(pDMPlayer);
+	else
+		return FALSE;
+
+}
 
 //In the future this will include the model and such, we also need to be sure players are spawning at specific positions, or transfer positions from server snapshots.
 //It's probably best to hook the spawnpoint routine so we can sync spawning.
@@ -669,6 +685,9 @@ void TurokEngine::SetModHooks()
 	
 	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
+	pIsDead = (tIsDead)DetourClassFunc((BYTE*)0x00486110, (BYTE*)IsDead, 10);
+	
+	VirtualProtect(pIsDead, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 
 	Codecave(0x0050F850, CameraFuncLoop1, 1);
