@@ -384,6 +384,12 @@ int __stdcall load_history(void* thisptr, char* hist_file)
 		*player_2_joined = 0;
 	}
 
+	if (!strcmp("$\\Data\\History\\Options.hst", hist_file))
+	{
+		DWORD data_area = *(DWORD*)(ret + 0x04);
+		*(BYTE*)(data_area) = 0; // turn autoaim off.
+	}
+
 	return ret;
 }
 DMPlayer* TurokEngine::GetDMPlayer(int index)
