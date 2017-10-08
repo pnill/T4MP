@@ -116,6 +116,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlayerSnap, weapon_switch_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlayerSnap, weapon_switch_time_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlayerSnap, weapon_slot_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlayerSnap, packet_sequence_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap_PlayerData_WeaponWheel, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -195,14 +196,15 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap, player_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ServerSnap, packet_sequence_),
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(Packet)},
   { 9, -1, sizeof(ConnectAck)},
   { 15, -1, sizeof(PlayerSnap)},
-  { 39, -1, sizeof(ServerSnap_PlayerData_WeaponWheel)},
-  { 83, -1, sizeof(ServerSnap_PlayerData)},
-  { 112, -1, sizeof(ServerSnap)},
+  { 40, -1, sizeof(ServerSnap_PlayerData_WeaponWheel)},
+  { 84, -1, sizeof(ServerSnap_PlayerData)},
+  { 113, -1, sizeof(ServerSnap)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -276,7 +278,7 @@ void AddDescriptorsImpl() {
       "verSnap\022 \n\013connect_ack\030\004 \001(\0132\013.ConnectAc"
       "k\"I\n\004Type\022\013\n\007invalid\020\000\022\022\n\016client_connect"
       "\020\001\022\017\n\013server_snap\020\002\022\017\n\013client_snap\020\003\"\033\n\n"
-      "ConnectAck\022\r\n\005index\030\001 \001(\005\"\357\002\n\nPlayerSnap"
+      "ConnectAck\022\r\n\005index\030\001 \001(\005\"\210\003\n\nPlayerSnap"
       "\022\t\n\001X\030\001 \001(\002\022\t\n\001Y\030\002 \001(\002\022\t\n\001Z\030\003 \001(\002\022\r\n\005Vie"
       "wX\030\004 \001(\002\022\r\n\005ViewY\030\005 \001(\002\022\024\n\014Walk_forward\030"
       "\006 \001(\010\022\025\n\rWalk_backward\030\007 \001(\010\022\021\n\tWalk_lef"
@@ -285,49 +287,50 @@ void AddDescriptorsImpl() {
       "hold\030\r \001(\010\022\026\n\016Fire_hold_time\030\016 \001(\002\022\024\n\014Fi"
       "re_release\030\017 \001(\010\022\031\n\021Fire_release_time\030\020 "
       "\001(\002\022\025\n\rWeapon_switch\030\021 \001(\005\022\032\n\022Weapon_swi"
-      "tch_time\030\022 \001(\002\022\023\n\013Weapon_slot\030\023 \001(\005\"\375\013\n\n"
-      "ServerSnap\022&\n\006player\030\001 \003(\0132\026.ServerSnap."
-      "PlayerData\032\306\013\n\nPlayerData\022\t\n\001X\030\001 \001(\002\022\t\n\001"
-      "Y\030\002 \001(\002\022\t\n\001Z\030\003 \001(\002\022\r\n\005ViewX\030\004 \001(\002\022\r\n\005Vie"
-      "wY\030\005 \001(\002\022\024\n\014Walk_forward\030\006 \001(\010\022\025\n\rWalk_b"
-      "ackward\030\007 \001(\010\022\021\n\tWalk_left\030\010 \001(\010\022\022\n\nWalk"
-      "_right\030\t \001(\010\022\014\n\004Jump\030\n \001(\010\022\016\n\006Crouch\030\013 \001"
-      "(\010\022\014\n\004Fire\030\014 \001(\010\022\021\n\tFire_hold\030\r \001(\010\022\026\n\016F"
-      "ire_hold_time\030\016 \001(\002\022\024\n\014Fire_release\030\017 \001("
-      "\010\022\031\n\021Fire_release_time\030\020 \001(\002\022\022\n\nMax_heal"
-      "th\030\021 \001(\002\022\026\n\016Current_health\030\022 \001(\002\022\025\n\rWeap"
-      "on_switch\030\023 \001(\005\022\032\n\022Weapon_switch_time\030\024 "
-      "\001(\002\022\023\n\013Weapon_slot\030\025 \001(\005\0223\n\007weapons\030\026 \001("
-      "\0132\".ServerSnap.PlayerData.WeaponWheel\022\r\n"
-      "\005index\030\027 \001(\005\022\022\n\ndeath_type\030\030 \001(\005\032\320\007\n\013Wea"
-      "ponWheel\022\020\n\010bWarClub\030\001 \001(\010\022\020\n\010bHas_Bow\030\002"
-      " \001(\010\022\027\n\017bow_Normal_Ammo\030\003 \001(\005\022\032\n\022bow_Exp"
-      "losive_Ammo\030\004 \001(\005\022\027\n\017bow_Poison_Ammo\030\005 \001"
-      "(\005\022\023\n\013bHas_TekBow\030\006 \001(\010\022\031\n\021TekBow_Normal"
-      "Ammo\030\007 \001(\005\022\034\n\024TekBow_ExplosiveAmmo\030\010 \001(\005"
-      "\022\031\n\021TekBow_PosionAmmo\030\t \001(\005\022\031\n\021bHas_Spik"
-      "eGrenade\030\n \001(\010\022\031\n\021SpikeGrenade_Ammo\030\013 \001("
-      "\005\022\023\n\013bHas_Pistol\030\014 \001(\010\022\023\n\013Pistol_Ammo\030\r "
-      "\001(\005\022\024\n\014bHas_ShotGun\030\016 \001(\010\022\024\n\014ShotGun_Amm"
-      "o\030\017 \001(\005\022\026\n\016bHas_Flecheete\030\020 \001(\010\022\026\n\016Fleec"
-      "hete_Ammo\030\021 \001(\005\022\024\n\014MiniGun_Ammo\030\022 \001(\005\022\033\n"
-      "\023bHas_RocketLauncher\030\023 \001(\010\022\024\n\014Rocket_Amm"
-      "o1\030\024 \001(\005\022\024\n\014Rocket_Ammo2\030\025 \001(\005\022\024\n\014Rocket"
-      "_Ammo3\030\026 \001(\005\022\031\n\021bHas_PlasmaCannon\030\027 \001(\010\022"
-      "\024\n\014Plasma_Ammo1\030\030 \001(\005\022\024\n\014Plasma_Ammo2\030\031 "
-      "\001(\005\022\024\n\014Plasma_Ammo3\030\032 \001(\005\022\031\n\021bHas_FlameT"
-      "hrower\030\033 \001(\010\022\031\n\021FlameThrower_Ammo\030\034 \001(\005\022"
-      "\027\n\017bHas_SpiderMine\030\035 \001(\010\022\027\n\017SpiderMine_A"
-      "mmo\030\036 \001(\005\022\027\n\017bHas_GravityGun\030\037 \001(\010\022\027\n\017Gr"
-      "avityGun_Ammo\030  \001(\005\022\030\n\020GravityGun_Ammo2\030"
-      "! \001(\005\022\027\n\017bHas_DarkMatter\030\" \001(\010\022\027\n\017DarkMa"
-      "tter_Ammo\030# \001(\005\022\025\n\rbHas_CrossBow\030$ \001(\010\022\034"
-      "\n\024CrossBow_Normal_Ammo\030% \001(\005\022\037\n\027CrossBow"
-      "_Explosive_Ammo\030& \001(\005\022\034\n\024CrossBow_Poison"
-      "_Ammo\030\' \001(\005b\006proto3"
+      "tch_time\030\022 \001(\002\022\023\n\013Weapon_slot\030\023 \001(\005\022\027\n\017p"
+      "acket_sequence\030\024 \001(\005\"\226\014\n\nServerSnap\022&\n\006p"
+      "layer\030\001 \003(\0132\026.ServerSnap.PlayerData\022\027\n\017p"
+      "acket_sequence\030\002 \001(\005\032\306\013\n\nPlayerData\022\t\n\001X"
+      "\030\001 \001(\002\022\t\n\001Y\030\002 \001(\002\022\t\n\001Z\030\003 \001(\002\022\r\n\005ViewX\030\004 "
+      "\001(\002\022\r\n\005ViewY\030\005 \001(\002\022\024\n\014Walk_forward\030\006 \001(\010"
+      "\022\025\n\rWalk_backward\030\007 \001(\010\022\021\n\tWalk_left\030\010 \001"
+      "(\010\022\022\n\nWalk_right\030\t \001(\010\022\014\n\004Jump\030\n \001(\010\022\016\n\006"
+      "Crouch\030\013 \001(\010\022\014\n\004Fire\030\014 \001(\010\022\021\n\tFire_hold\030"
+      "\r \001(\010\022\026\n\016Fire_hold_time\030\016 \001(\002\022\024\n\014Fire_re"
+      "lease\030\017 \001(\010\022\031\n\021Fire_release_time\030\020 \001(\002\022\022"
+      "\n\nMax_health\030\021 \001(\002\022\026\n\016Current_health\030\022 \001"
+      "(\002\022\025\n\rWeapon_switch\030\023 \001(\005\022\032\n\022Weapon_swit"
+      "ch_time\030\024 \001(\002\022\023\n\013Weapon_slot\030\025 \001(\005\0223\n\007we"
+      "apons\030\026 \001(\0132\".ServerSnap.PlayerData.Weap"
+      "onWheel\022\r\n\005index\030\027 \001(\005\022\022\n\ndeath_type\030\030 \001"
+      "(\005\032\320\007\n\013WeaponWheel\022\020\n\010bWarClub\030\001 \001(\010\022\020\n\010"
+      "bHas_Bow\030\002 \001(\010\022\027\n\017bow_Normal_Ammo\030\003 \001(\005\022"
+      "\032\n\022bow_Explosive_Ammo\030\004 \001(\005\022\027\n\017bow_Poiso"
+      "n_Ammo\030\005 \001(\005\022\023\n\013bHas_TekBow\030\006 \001(\010\022\031\n\021Tek"
+      "Bow_NormalAmmo\030\007 \001(\005\022\034\n\024TekBow_Explosive"
+      "Ammo\030\010 \001(\005\022\031\n\021TekBow_PosionAmmo\030\t \001(\005\022\031\n"
+      "\021bHas_SpikeGrenade\030\n \001(\010\022\031\n\021SpikeGrenade"
+      "_Ammo\030\013 \001(\005\022\023\n\013bHas_Pistol\030\014 \001(\010\022\023\n\013Pist"
+      "ol_Ammo\030\r \001(\005\022\024\n\014bHas_ShotGun\030\016 \001(\010\022\024\n\014S"
+      "hotGun_Ammo\030\017 \001(\005\022\026\n\016bHas_Flecheete\030\020 \001("
+      "\010\022\026\n\016Fleechete_Ammo\030\021 \001(\005\022\024\n\014MiniGun_Amm"
+      "o\030\022 \001(\005\022\033\n\023bHas_RocketLauncher\030\023 \001(\010\022\024\n\014"
+      "Rocket_Ammo1\030\024 \001(\005\022\024\n\014Rocket_Ammo2\030\025 \001(\005"
+      "\022\024\n\014Rocket_Ammo3\030\026 \001(\005\022\031\n\021bHas_PlasmaCan"
+      "non\030\027 \001(\010\022\024\n\014Plasma_Ammo1\030\030 \001(\005\022\024\n\014Plasm"
+      "a_Ammo2\030\031 \001(\005\022\024\n\014Plasma_Ammo3\030\032 \001(\005\022\031\n\021b"
+      "Has_FlameThrower\030\033 \001(\010\022\031\n\021FlameThrower_A"
+      "mmo\030\034 \001(\005\022\027\n\017bHas_SpiderMine\030\035 \001(\010\022\027\n\017Sp"
+      "iderMine_Ammo\030\036 \001(\005\022\027\n\017bHas_GravityGun\030\037"
+      " \001(\010\022\027\n\017GravityGun_Ammo\030  \001(\005\022\030\n\020Gravity"
+      "Gun_Ammo2\030! \001(\005\022\027\n\017bHas_DarkMatter\030\" \001(\010"
+      "\022\027\n\017DarkMatter_Ammo\030# \001(\005\022\025\n\rbHas_CrossB"
+      "ow\030$ \001(\010\022\034\n\024CrossBow_Normal_Ammo\030% \001(\005\022\037"
+      "\n\027CrossBow_Explosive_Ammo\030& \001(\005\022\034\n\024Cross"
+      "Bow_Poison_Ammo\030\' \001(\005b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2179);
+      descriptor, 2229);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "t4mp.proto", &protobuf_RegisterTypes);
 }
@@ -1167,6 +1170,7 @@ const int PlayerSnap::kFireReleaseTimeFieldNumber;
 const int PlayerSnap::kWeaponSwitchFieldNumber;
 const int PlayerSnap::kWeaponSwitchTimeFieldNumber;
 const int PlayerSnap::kWeaponSlotFieldNumber;
+const int PlayerSnap::kPacketSequenceFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 PlayerSnap::PlayerSnap()
@@ -1183,15 +1187,15 @@ PlayerSnap::PlayerSnap(const PlayerSnap& from)
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&x_, &from.x_,
-    static_cast<size_t>(reinterpret_cast<char*>(&weapon_slot_) -
-    reinterpret_cast<char*>(&x_)) + sizeof(weapon_slot_));
+    static_cast<size_t>(reinterpret_cast<char*>(&packet_sequence_) -
+    reinterpret_cast<char*>(&x_)) + sizeof(packet_sequence_));
   // @@protoc_insertion_point(copy_constructor:PlayerSnap)
 }
 
 void PlayerSnap::SharedCtor() {
   ::memset(&x_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&weapon_slot_) -
-      reinterpret_cast<char*>(&x_)) + sizeof(weapon_slot_));
+      reinterpret_cast<char*>(&packet_sequence_) -
+      reinterpret_cast<char*>(&x_)) + sizeof(packet_sequence_));
   _cached_size_ = 0;
 }
 
@@ -1233,8 +1237,8 @@ void PlayerSnap::Clear() {
   (void) cached_has_bits;
 
   ::memset(&x_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&weapon_slot_) -
-      reinterpret_cast<char*>(&x_)) + sizeof(weapon_slot_));
+      reinterpret_cast<char*>(&packet_sequence_) -
+      reinterpret_cast<char*>(&x_)) + sizeof(packet_sequence_));
   _internal_metadata_.Clear();
 }
 
@@ -1514,6 +1518,20 @@ bool PlayerSnap::MergePartialFromCodedStream(
         break;
       }
 
+      // int32 packet_sequence = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(160u /* 160 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &packet_sequence_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -1635,6 +1653,11 @@ void PlayerSnap::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(19, this->weapon_slot(), output);
   }
 
+  // int32 packet_sequence = 20;
+  if (this->packet_sequence() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(20, this->packet_sequence(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -1742,6 +1765,11 @@ void PlayerSnap::SerializeWithCachedSizes(
   // int32 Weapon_slot = 19;
   if (this->weapon_slot() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(19, this->weapon_slot(), target);
+  }
+
+  // int32 packet_sequence = 20;
+  if (this->packet_sequence() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(20, this->packet_sequence(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1860,6 +1888,13 @@ size_t PlayerSnap::ByteSizeLong() const {
         this->weapon_slot());
   }
 
+  // int32 packet_sequence = 20;
+  if (this->packet_sequence() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->packet_sequence());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -1946,6 +1981,9 @@ void PlayerSnap::MergeFrom(const PlayerSnap& from) {
   if (from.weapon_slot() != 0) {
     set_weapon_slot(from.weapon_slot());
   }
+  if (from.packet_sequence() != 0) {
+    set_packet_sequence(from.packet_sequence());
+  }
 }
 
 void PlayerSnap::CopyFrom(const ::google::protobuf::Message& from) {
@@ -1991,6 +2029,7 @@ void PlayerSnap::InternalSwap(PlayerSnap* other) {
   swap(weapon_switch_, other->weapon_switch_);
   swap(weapon_switch_time_, other->weapon_switch_time_);
   swap(weapon_slot_, other->weapon_slot_);
+  swap(packet_sequence_, other->packet_sequence_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
@@ -2267,6 +2306,20 @@ void PlayerSnap::set_weapon_slot(::google::protobuf::int32 value) {
   
   weapon_slot_ = value;
   // @@protoc_insertion_point(field_set:PlayerSnap.Weapon_slot)
+}
+
+// int32 packet_sequence = 20;
+void PlayerSnap::clear_packet_sequence() {
+  packet_sequence_ = 0;
+}
+::google::protobuf::int32 PlayerSnap::packet_sequence() const {
+  // @@protoc_insertion_point(field_get:PlayerSnap.packet_sequence)
+  return packet_sequence_;
+}
+void PlayerSnap::set_packet_sequence(::google::protobuf::int32 value) {
+  
+  packet_sequence_ = value;
+  // @@protoc_insertion_point(field_set:PlayerSnap.packet_sequence)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -5816,6 +5869,7 @@ void ServerSnap_PlayerData::set_death_type(::google::protobuf::int32 value) {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ServerSnap::kPlayerFieldNumber;
+const int ServerSnap::kPacketSequenceFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ServerSnap::ServerSnap()
@@ -5832,10 +5886,12 @@ ServerSnap::ServerSnap(const ServerSnap& from)
       player_(from.player_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  packet_sequence_ = from.packet_sequence_;
   // @@protoc_insertion_point(copy_constructor:ServerSnap)
 }
 
 void ServerSnap::SharedCtor() {
+  packet_sequence_ = 0;
   _cached_size_ = 0;
 }
 
@@ -5877,6 +5933,7 @@ void ServerSnap::Clear() {
   (void) cached_has_bits;
 
   player_.Clear();
+  packet_sequence_ = 0;
   _internal_metadata_.Clear();
 }
 
@@ -5896,6 +5953,20 @@ bool ServerSnap::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                 input, add_player()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 packet_sequence = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &packet_sequence_)));
         } else {
           goto handle_unusual;
         }
@@ -5935,6 +6006,11 @@ void ServerSnap::SerializeWithCachedSizes(
       1, this->player(static_cast<int>(i)), output);
   }
 
+  // int32 packet_sequence = 2;
+  if (this->packet_sequence() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->packet_sequence(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -5955,6 +6031,11 @@ void ServerSnap::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageNoVirtualToArray(
         1, this->player(static_cast<int>(i)), deterministic, target);
+  }
+
+  // int32 packet_sequence = 2;
+  if (this->packet_sequence() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->packet_sequence(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -5983,6 +6064,13 @@ size_t ServerSnap::ByteSizeLong() const {
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->player(static_cast<int>(i)));
     }
+  }
+
+  // int32 packet_sequence = 2;
+  if (this->packet_sequence() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->packet_sequence());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -6015,6 +6103,9 @@ void ServerSnap::MergeFrom(const ServerSnap& from) {
   (void) cached_has_bits;
 
   player_.MergeFrom(from.player_);
+  if (from.packet_sequence() != 0) {
+    set_packet_sequence(from.packet_sequence());
+  }
 }
 
 void ServerSnap::CopyFrom(const ::google::protobuf::Message& from) {
@@ -6042,6 +6133,7 @@ void ServerSnap::Swap(ServerSnap* other) {
 void ServerSnap::InternalSwap(ServerSnap* other) {
   using std::swap;
   player_.InternalSwap(&other->player_);
+  swap(packet_sequence_, other->packet_sequence_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
@@ -6082,6 +6174,20 @@ const ::google::protobuf::RepeatedPtrField< ::ServerSnap_PlayerData >&
 ServerSnap::player() const {
   // @@protoc_insertion_point(field_list:ServerSnap.player)
   return player_;
+}
+
+// int32 packet_sequence = 2;
+void ServerSnap::clear_packet_sequence() {
+  packet_sequence_ = 0;
+}
+::google::protobuf::int32 ServerSnap::packet_sequence() const {
+  // @@protoc_insertion_point(field_get:ServerSnap.packet_sequence)
+  return packet_sequence_;
+}
+void ServerSnap::set_packet_sequence(::google::protobuf::int32 value) {
+  
+  packet_sequence_ = value;
+  // @@protoc_insertion_point(field_set:ServerSnap.packet_sequence)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

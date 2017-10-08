@@ -83,6 +83,7 @@ void T4Network::SendSnapShot()
 
 
 	ServerSnap *server_snapshot = snappak.mutable_server_snapshot();
+	server_snapshot->set_packet_sequence(snappack_sequence);
 
 	/* We'll add the server player first... */
 	ServerSnap_PlayerData *player_data = server_snapshot->add_player();
@@ -327,11 +328,13 @@ void T4Network::SendSnapShot()
 	}
 
 	/* Now that the entire packet has been built time to send it out to each individual player */
+
 	char* SnapPacket = new char[snappak.ByteSize()];
 
 	ZeroMemory(SnapPacket, snappak.ByteSize());
 
 	snappak.SerializeToArray(SnapPacket, snappak.ByteSize());
+
 
 	/* Re-loop the network array and start sending the packet out */
 	for (NetworkPlayer* net_player : netplayers)
@@ -376,6 +379,8 @@ void T4Network::SendSnapShot()
 
 	}
 
+	snappack_sequence++;
+
 
 }
 
@@ -417,6 +422,7 @@ void T4Network::SendPlayerSnapShot()
 
 	PlayerSnap *player_snap = PlayerSnapPacket.mutable_player_snapshot();
 	DMPlayer* local_player = netEngine.GetDMPlayer(0);
+	player_snap->set_packet_sequence(playersnap_pack_sequence);
 
 	if (local_player)
 	{
@@ -468,6 +474,8 @@ void T4Network::SendPlayerSnapShot()
 
 
 		sendto(serverSock, playersnap_packet, PlayerSnapPacket.ByteSize(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
+
+		playersnap_pack_sequence++;
 	}
 
 }
@@ -487,6 +495,17 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 			player_index = net_player->index;
 			break;
 		}
+	}
+
+
+	/* This should make sure playersnapshots are never read out of order, and that we don't get duplicates of the same data */
+	if (pnet_player->last_packet_seq != 0 && pnet_player->last_packet_seq >= pPlayerSnap.packet_sequence())
+	{
+		return;
+	}
+	else 
+	{
+		pnet_player->last_packet_seq = pPlayerSnap.packet_sequence();
 	}
 
 	if (player_index == 0)
@@ -684,6 +703,17 @@ void T4Network::Destroy()
 /* This should only happen to clients! */
 void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 {
+
+
+	if (snappack_sequence != 0 && snappack_sequence >= pSeverSnap.packet_sequence())
+	{
+		return;
+	}
+	else 
+	{
+		snappack_sequence = pSeverSnap.packet_sequence();
+	}
+	
 	/* 
 		More code that shouldn't be the way it is, but it'll have to do for the start of things
 	

@@ -539,6 +539,12 @@ class PlayerSnap : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::int32 weapon_slot() const;
   void set_weapon_slot(::google::protobuf::int32 value);
 
+  // int32 packet_sequence = 20;
+  void clear_packet_sequence();
+  static const int kPacketSequenceFieldNumber = 20;
+  ::google::protobuf::int32 packet_sequence() const;
+  void set_packet_sequence(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PlayerSnap)
  private:
 
@@ -562,6 +568,7 @@ class PlayerSnap : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::int32 weapon_switch_;
   float weapon_switch_time_;
   ::google::protobuf::int32 weapon_slot_;
+  ::google::protobuf::int32 packet_sequence_;
   mutable int _cached_size_;
   friend struct protobuf_t4mp_2eproto::TableStruct;
 };
@@ -1288,11 +1295,18 @@ class ServerSnap : public ::google::protobuf::Message /* @@protoc_insertion_poin
   const ::google::protobuf::RepeatedPtrField< ::ServerSnap_PlayerData >&
       player() const;
 
+  // int32 packet_sequence = 2;
+  void clear_packet_sequence();
+  static const int kPacketSequenceFieldNumber = 2;
+  ::google::protobuf::int32 packet_sequence() const;
+  void set_packet_sequence(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:ServerSnap)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::ServerSnap_PlayerData > player_;
+  ::google::protobuf::int32 packet_sequence_;
   mutable int _cached_size_;
   friend struct protobuf_t4mp_2eproto::TableStruct;
 };
@@ -1728,6 +1742,20 @@ inline void PlayerSnap::set_weapon_slot(::google::protobuf::int32 value) {
   
   weapon_slot_ = value;
   // @@protoc_insertion_point(field_set:PlayerSnap.Weapon_slot)
+}
+
+// int32 packet_sequence = 20;
+inline void PlayerSnap::clear_packet_sequence() {
+  packet_sequence_ = 0;
+}
+inline ::google::protobuf::int32 PlayerSnap::packet_sequence() const {
+  // @@protoc_insertion_point(field_get:PlayerSnap.packet_sequence)
+  return packet_sequence_;
+}
+inline void PlayerSnap::set_packet_sequence(::google::protobuf::int32 value) {
+  
+  packet_sequence_ = value;
+  // @@protoc_insertion_point(field_set:PlayerSnap.packet_sequence)
 }
 
 // -------------------------------------------------------------------
@@ -2678,6 +2706,20 @@ inline const ::google::protobuf::RepeatedPtrField< ::ServerSnap_PlayerData >&
 ServerSnap::player() const {
   // @@protoc_insertion_point(field_list:ServerSnap.player)
   return player_;
+}
+
+// int32 packet_sequence = 2;
+inline void ServerSnap::clear_packet_sequence() {
+  packet_sequence_ = 0;
+}
+inline ::google::protobuf::int32 ServerSnap::packet_sequence() const {
+  // @@protoc_insertion_point(field_get:ServerSnap.packet_sequence)
+  return packet_sequence_;
+}
+inline void ServerSnap::set_packet_sequence(::google::protobuf::int32 value) {
+  
+  packet_sequence_ = value;
+  // @@protoc_insertion_point(field_set:ServerSnap.packet_sequence)
 }
 
 #ifdef __GNUC__

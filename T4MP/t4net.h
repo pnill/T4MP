@@ -25,6 +25,7 @@ class NetworkPlayer
 		int death_type = 0;
 		bool server_call_death = false;
 
+		int last_packet_seq = 0;
 		DMPlayer* PlayerObject = NULL;
 };
 
@@ -33,6 +34,8 @@ class T4Network
 	int local_index = 0;
 	int weapon_switch_attempts = 0;
 	int last_player_index = 0;
+	int playersnap_pack_sequence = 0;
+	int snappack_sequence = 0;
 
 	SOCKET serverSock = INVALID_SOCKET;
 	struct sockaddr_in serverAddr;

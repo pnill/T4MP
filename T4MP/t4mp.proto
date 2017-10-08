@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+message Packet{
+
+	 enum Type {
+	  invalid = 0;
+	  client_connect = 1;
+	  server_snap = 2;
+	  client_snap = 3;
+	 };
+	 
+	Packet.Type type = 1;
+	PlayerSnap player_snapshot = 2;
+	ServerSnap server_snapshot = 3;
+	ConnectAck connect_ack = 4;
+};
+
+message ConnectAck
+{
+	int32 index = 1;
+}
+
+message PlayerSnap
+{
+		float X = 1;
+		float Y = 2;
+		float Z = 3;
+		float ViewX = 4;
+		float ViewY = 5;
+		bool Walk_forward = 6;
+		bool Walk_backward = 7;
+		bool Walk_left = 8;
+		bool Walk_right = 9;
+		bool Jump = 10;
+		bool Crouch = 11;
+		bool Fire = 12;
+		bool Fire_hold = 13;
+		float Fire_hold_time = 14;
+		bool Fire_release = 15;
+		float Fire_release_time = 16;
+		int32 Weapon_switch = 17;
+		float Weapon_switch_time = 18;
+		int32 Weapon_slot = 19;
+		int32 packet_sequence = 20;
+
+};
+
+
+
+
+	message ServerSnap
+	{
+		message PlayerData
+		{
+			message WeaponWheel
+			{	
+				bool bWarClub = 1;
+				
+				bool bHas_Bow = 2;
+				int32 bow_Normal_Ammo = 3;
+				int32 bow_Explosive_Ammo = 4;
+				int32 bow_Poison_Ammo = 5;
+				
+				bool bHas_TekBow = 6;
+				int32 TekBow_NormalAmmo = 7;
+				int32 TekBow_ExplosiveAmmo = 8;
+				int32 TekBow_PosionAmmo = 9;
+				
+				bool bHas_SpikeGrenade = 10;
+				int32 SpikeGrenade_Ammo = 11;
+				
+				bool bHas_Pistol = 12;
+				int32 Pistol_Ammo = 13;
+				
+				bool bHas_ShotGun = 14;
+				int32 ShotGun_Ammo = 15;
+				
+				bool bHas_Flecheete = 16;
+				int32 Fleechete_Ammo = 17;
+				int32 MiniGun_Ammo = 18;
+				
+				bool bHas_RocketLauncher = 19;
+				int32 Rocket_Ammo1 = 20;
+				int32 Rocket_Ammo2 = 21;
+				int32 Rocket_Ammo3 = 22;
+			
+				bool bHas_PlasmaCannon = 23;
+				int32 Plasma_Ammo1 = 24;
+				int32 Plasma_Ammo2 = 25;
+				int32 Plasma_Ammo3 = 26;
+				
+				bool bHas_FlameThrower = 27;
+				int32 FlameThrower_Ammo = 28;
+				
+				bool bHas_SpiderMine = 29;
+				int32 SpiderMine_Ammo = 30;
+				
+				bool bHas_GravityGun = 31;
+				int32 GravityGun_Ammo = 32;
+				int32 GravityGun_Ammo2 = 33;
+				
+				bool bHas_DarkMatter = 34;
+				int32 DarkMatter_Ammo = 35;
+				
+				bool bHas_CrossBow = 36;
+				int32 CrossBow_Normal_Ammo = 37;
+				int32 CrossBow_Explosive_Ammo = 38;
+				int32 CrossBow_Poison_Ammo = 39;
+			};
+			
+			float X = 1;
+			float Y = 2;
+			float Z = 3;
+			float ViewX = 4;
+			float ViewY = 5;
+			bool Walk_forward = 6;
+			bool Walk_backward = 7;
+			bool Walk_left = 8;
+			bool Walk_right = 9;
+			bool Jump = 10;
+			bool Crouch = 11;
+			bool Fire = 12;
+			bool Fire_hold = 13;
+			float Fire_hold_time = 14;
+			bool Fire_release = 15;
+			float Fire_release_time = 16;
+			float Max_health = 17;
+			float Current_health = 18;
+			int32 Weapon_switch = 19;
+			float Weapon_switch_time = 20;
+			int32 Weapon_slot = 21;
+			WeaponWheel weapons = 22;
+			int32 index = 23;
+			int32 death_type = 24;
+			
+		};
+
+		repeated PlayerData player = 1;
+		int32 packet_sequence = 2;
+	};

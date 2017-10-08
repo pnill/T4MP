@@ -721,13 +721,24 @@ DMPlayer* TurokEngine::SpawnPlayer()
 
 	DWORD dwOld;
 	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
+	VirtualProtect((BYTE*)0x0050CED2, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
+	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
+	
 	*(BYTE*)0x004DAD49 = 0xEB;
+
+	/* 
+		Nop the increment for the camera array pointer. 
+		This should stop the game from doing things like displaying water screen effects for everyone.
+	*/
+	memset((PVOID)0x0050CED2, 0x90, 4); 
 
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
 
 	*(BYTE*)0x004DAD49 = OrigByte;
+	
+	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
 
 	return nPlayer;
 }
