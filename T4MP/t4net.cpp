@@ -493,6 +493,12 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		{
 			pnet_player = net_player;
 			player_index = net_player->index;
+			
+			if (std::chrono::duration_cast<std::chrono::seconds>(net_player->last_packet_time - std::chrono::high_resolution_clock::now()).count() > 30)
+			{
+				printf("Player index %i is lagging!, It's been 5 seconds since we got a packet from them and they just started sending again!\r\n", player_index);
+			}
+			
 			break;
 		}
 	}
@@ -517,18 +523,6 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 	DMPlayer* pPlayer = netEngine.GetDMPlayer(player_index);
 	if (pPlayer)
 	{
-		pPlayer->ViewX = pPlayerSnap.viewx();
-		pPlayer->ViewY = pPlayerSnap.viewy();
-		
-		pPlayer->POS.x = pPlayerSnap.x();
-		pPlayer->POS.y = pPlayerSnap.y();
-		pPlayer->POS.z = pPlayerSnap.z();
-
-		pPlayer->Weapon_switch_time = pPlayerSnap.weapon_switch_time();
-
-		if (pPlayer->Weapon_slot != pPlayerSnap.weapon_slot())
-			SwitchWeapon(&pPlayer->pWeapon, (pPlayerSnap.weapon_slot()) + 1);
-
 		if (pPlayerSnap.walk_backward())
 			pPlayer->Walk_backward = 1.0f;
 		else
@@ -549,6 +543,19 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		else
 			pPlayer->Walk_right = 0.0f;
 
+		pPlayer->ViewX = pPlayerSnap.viewx();
+		pPlayer->ViewY = pPlayerSnap.viewy();
+		
+		pPlayer->POS.x = pPlayerSnap.x();
+		pPlayer->POS.y = pPlayerSnap.y();
+		pPlayer->POS.z = pPlayerSnap.z();
+
+		pPlayer->Weapon_switch_time = pPlayerSnap.weapon_switch_time();
+
+		if (pPlayer->Weapon_slot != pPlayerSnap.weapon_slot())
+			SwitchWeapon(&pPlayer->pWeapon, (pPlayerSnap.weapon_slot()) + 1);
+
+	
 		if (pPlayerSnap.crouch())
 			pPlayer->crouch(0, 1.0f);
 		else
@@ -704,6 +711,10 @@ void T4Network::Destroy()
 void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 {
 
+	if (std::chrono::duration_cast<std::chrono::seconds>(last_packet_time - std::chrono::high_resolution_clock::now()).count() > 5)
+	{
+		printf("[WARNING] Our connection to the server appears to be lagging! There was 5 seconds between that last packet.\r\n");
+	}
 
 	if (snappack_sequence != 0 && snappack_sequence >= pSeverSnap.packet_sequence())
 	{
@@ -981,15 +992,6 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					if (!local_player)
 					{
 
-						/* View Angles*/
-						pDMPlayer->ViewX = player.viewx();
-						pDMPlayer->ViewY = player.viewy();
-
-						/* Player Position */
-
-						pDMPlayer->POS.x = player.x();
-						pDMPlayer->POS.y = player.y();
-						pDMPlayer->POS.z = player.z();
 
 						/* Player Movement - we use these to enable actual walk animation instead of just sliding. */
 						if (player.walk_backward())
@@ -1011,6 +1013,16 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 							pDMPlayer->Walk_right = 1.0f;
 						else
 							pDMPlayer->Walk_right = 0.0f;
+
+						/* View Angles*/
+						pDMPlayer->ViewX = player.viewx();
+						pDMPlayer->ViewY = player.viewy();
+
+						/* Player Position */
+
+						pDMPlayer->POS.x = player.x();
+						pDMPlayer->POS.y = player.y();
+						pDMPlayer->POS.z = player.z();
 
 						/* Did they jump?, also need to get an idea of what these floats actually do and if they need to be synced. */
 						if (player.jump())
@@ -1092,6 +1104,7 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 	{
 		if (check_player->ipaddr == ip && check_player->port == client_port)
 		{
+
 			/* Be sure we resend an Ack, if they dropped the packet they wouldn't have gotten one and it could be why they're trying to connect again */
 			Packet ConnectAckPak;
 			ConnectAckPak.set_type(Packet_Type_client_connect);

@@ -39,11 +39,14 @@ __declspec(naked) void screen_effect_osd() // Fix crash when new player is takin
 	}
 }
 
+
+
+
+/* Currently this is not in-use any longer. */
 DWORD nPlayerPTR = 0x00000000;
 DWORD lPlayer = 0x00000000;
 DWORD CameraLoop1_Ret = 0;
 DWORD CameraLoop2_Ret = 0;
-
 
 __declspec(naked) void CameraFuncLoop2() // make sure we only ever render the first player's stuff.
 { // see camera1 loop for comments on flow.
@@ -145,6 +148,14 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 
 }
 
+/* 
+
+	Unknown related to camera but not sure what exactly it's handling... 
+	I seemed to assume it would handle the HUD but the HUD text is still there.
+
+	Will require additional investigation if it's required at all.
+
+*/
 typedef void(__stdcall *tcamera_hook3)(void* thisptr, BlendedCamera* pCamera);
 tcamera_hook3 pcamera_hook3;
 
@@ -164,19 +175,14 @@ void __stdcall camera_hook3(void* thisptr, BlendedCamera* pCamera) // third came
 	return pcamera_hook3(thisptr,pCamera);
 }
 
+
+/* This hook is to specifically get rid of the "You are dead message" */
 typedef int(__stdcall *tdeath_message_hook)(void* thisptr);
 tdeath_message_hook pdeath_message_hook;
 
 int __stdcall death_message(void *thisptr)
 {
-	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-	Player* localplayer = 0;
-
-	if (TurokEngine->pT4Game)
-		if (TurokEngine->pT4Game->pEngineObjects)
-			if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
-				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
-					localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
+	DMPlayer* localplayer = tengine.GetDMPlayer(0); // Simplify.
 
 	if (localplayer != 0)
 	{
@@ -187,33 +193,24 @@ int __stdcall death_message(void *thisptr)
 	return pdeath_message_hook(thisptr);
 }
 
+
+/* Input polling, this is looped per player or object in order to determine if input or actions are being applied to it. */
 typedef void(__stdcall *tinput_query)(void *thisptr, DWORD pInputPointer);
 tinput_query pinput_query;
 
 void __stdcall input_query(void *thisptr, DWORD pInputPointer)
-{
-	if (lPlayer != 0) // lPlayer populates in the camera function, once the camera is running we know the player is fully spawned and we can start to deal with input.
+{	
+	
+	/* If the player is not the local player do not process their input. */
+	DMPlayer* localplayer = tengine.GetDMPlayer(0);
+	if (localplayer != 0)
 	{
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-		Player* localplayer = 0;
-
-		//There's probably a better way to take care of this...
-		if (TurokEngine->pT4Game)
-			if (TurokEngine->pT4Game->pEngineObjects)
-				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0])
-					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer)
-						localplayer = (Player*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer; // use pPlayer instead of DMPlayer as it exists even when dead.
-
-		if (localplayer != 0)
+		if (localplayer != (DMPlayer*)pInputPointer)
 		{
-			if (localplayer != (Player*)pInputPointer)
-			{
-				return;
-			}
+			return;
 		}
 	}
-
-
+	
 	t4net.ProcessMessage();
 
 	pinput_query(thisptr, pInputPointer);
@@ -237,11 +234,6 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 			tengine.SpawnPlayer();
 			spawned = true;
 		}
-		//		ApplyDamage();
-		//SwitchWeapon();
-		//printf("Firing Weapon\r\n");
-
-		//FireWeapon();
 	}
 
 	return;
@@ -728,10 +720,12 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	DWORD dwOld;
 	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x0050CED2, 4, PAGE_EXECUTE_READWRITE, &dwOld);
+	VirtualProtect((BYTE*)0x00510AF9, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
 	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
-	
+	DWORD OrigBytes_2 = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
+
 	*(BYTE*)0x004DAD49 = 0xEB;
 
 	/* 
@@ -739,12 +733,15 @@ DMPlayer* TurokEngine::SpawnPlayer()
 		This should stop the game from doing things like displaying water screen effects for everyone.
 	*/
 	memset((PVOID)0x0050CED2, 0x90, 4); 
+	memset((PVOID)0x00510AF9, 0x90, 4); // This one is for the camera itself.
+	//.text:00510BB9                 add     dword ptr [esi+4], 4 - another place to potentially apply this patch.
 
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
 
 	*(BYTE*)0x004DAD49 = OrigByte;
 	
 	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
+	memcpy((PVOID)0x00510AF9, &OrigBytes_2, 4); // Restore original Bytes.
 
 	return nPlayer;
 }
@@ -851,8 +848,11 @@ void TurokEngine::SetModHooks()
 	VirtualProtect(pPickupCrash8, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 
-	Codecave(0x0050F850, CameraFuncLoop1, 1);
-	Codecave(0x0050F8F0, CameraFuncLoop2, 1);
+	/* Because I was able to remove the player from the array of cameras/render loop this should no longer be needed. */
+	//Codecave(0x0050F850, CameraFuncLoop1, 1);
+	//Codecave(0x0050F8F0, CameraFuncLoop2, 1);
+
+
 	Codecave(0x004EE7F0, screen_effect_osd, 1);
 	Codecave(0x004E08B0, DamagePlayer, 4);
 	Codecave(0x004DE1B0, KillPlayer, 2);

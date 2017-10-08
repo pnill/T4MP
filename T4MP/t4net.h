@@ -2,6 +2,7 @@
 #define _WINSOCKAPI_ 
 #include <winsock2.h>
 #include <vector>
+#include <chrono>
 #include "T4Engine.h"
 #include "t4mp.pb.h"
 
@@ -27,6 +28,10 @@ class NetworkPlayer
 
 		int last_packet_seq = 0;
 		DMPlayer* PlayerObject = NULL;
+		std::chrono::steady_clock::time_point last_packet_time = std::chrono::high_resolution_clock::now();
+		;
+
+
 };
 
 class T4Network
@@ -36,6 +41,7 @@ class T4Network
 	int last_player_index = 0;
 	int playersnap_pack_sequence = 0;
 	int snappack_sequence = 0;
+	std::chrono::steady_clock::time_point last_packet_time = std::chrono::high_resolution_clock::now();
 
 	SOCKET serverSock = INVALID_SOCKET;
 	struct sockaddr_in serverAddr;
