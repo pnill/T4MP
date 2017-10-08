@@ -240,6 +240,8 @@ void __stdcall input_query(void *thisptr, DWORD pInputPointer)
 }
 
 
+
+/* The actual level load actor system, where the level itself loads each individual actor within it. */
 typedef int(__stdcall *tlevel_load_actor)(void *thisptr, char* a2, int a3, int a4);
 tlevel_load_actor plevel_load_actor;
 
@@ -248,6 +250,7 @@ int __stdcall level_load_actor(void* thisptr, char* a2, int a3, int a4)
 	return plevel_load_actor(thisptr, a2, a3, a4);
 }
 
+/*  One of the initial calls after initiating a spawn, I believe this actually handles each objects constructor */
 typedef int(__stdcall *tconstruct_actor)(void* thisptr, char* object_name, char* object_path);
 tconstruct_actor pconstruct_actor;
 
@@ -279,6 +282,15 @@ int __stdcall construct_actor(void* thisptr, char* object_name, char* object_pat
 }
 
 
+
+/* 
+	When a second player is spawned the pause menu would crash due to a pointer being 0.
+	
+	This is in place as an attempt to fix that, but may no longer be needed depending on how this works. 
+
+	The reason I believe it may no longer be needed is the player object being removed from several render loops.
+
+*/
 typedef char(__stdcall *tpause_menu)(void* thisptr, int a2);
 tpause_menu ppause_menu;
 
@@ -290,6 +302,18 @@ char __stdcall pause_menu(void* thisptr, int a2)
 
 	return ppause_menu(thisptr, a2);
 }
+
+
+
+/*	
+
+	All of the below are related to fixes for crashes upon a player dying.
+
+	Some of these are currently causing problems see death2 for instance.
+	
+	I should probably do additional research into this to determine if it's also related in any way to the current random crashes.
+
+*/
 
 typedef void(__stdcall *tplayer_death)(void* thisptr);
 tplayer_death pplayer_death;
@@ -336,6 +360,8 @@ void __stdcall player_death4(void* thisptr, float a2)
 	return pplayer_death4(thisptr, a2);
 }
 
+
+/* Self explanatory, was implemented as a way to fix a crash found while players were respawning... */
 typedef int(__stdcall *tplayer_respawn_crashfix)(void* thisptr);
 tplayer_respawn_crashfix pplayer_respawn_crashfix;
 
@@ -351,6 +377,15 @@ int __stdcall player_respawn_crashfix(void* thisptr)
 	return pplayer_respawn_crashfix(thisptr);
 }
 
+
+/* 
+	Literally a method used to spawn objects in the engine.
+	Spawning players utilizes this, but typically it's only used for pickups or other things with a static location.
+
+	In theory this could be used to sync specific powerups which are usually spawned with RNG (Speed Increase, Health Increase, Damage Increase, etc).
+
+*/
+
 typedef int(__stdcall *tspawn_object)(void* thisptr, int a2, char* object_name, char* object_path, Vector3* pos_struct, int a6);
 tspawn_object pspawn_object;
 
@@ -361,6 +396,15 @@ int __stdcall spawn_object_engine(void* thisptr, int a2, char* object_name, char
 	
 	return ret;
 }
+
+/* 
+	The game history functions /data/history/*.hst are all loaded here.
+
+	Multiplayerjoin.hst is hooked to make sure the second  player never joins the game and as a result their player is not spawned, and there is no second screen.
+
+	Options.hst is hooked to make sure AutoAim is disabled as it will cause unfair host advantage and major de-sync for clients believing they've done damage.
+*/
+
 
 typedef int(__stdcall *tload_history)(void *thisptr, char* hist_file);
 tload_history pload_history;
@@ -384,6 +428,9 @@ int __stdcall load_history(void* thisptr, char* hist_file)
 
 	return ret;
 }
+
+
+/* Used in a ton of places in order to get a valid DM Player pointer based on index. */
 DMPlayer* TurokEngine::GetDMPlayer(int index)
 {
 	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
@@ -404,6 +451,8 @@ DMPlayer* TurokEngine::GetDMPlayer(int index)
 	return 0;
 }
 
+
+/* Self Explanatory, the intial press of a fire button (tab or left mouse down) previous to release or hold */
 typedef void(__stdcall *tFireWeapon)(DMPlayer *pThis, int a1, int a2);
 tFireWeapon pFireWeapon;
 
@@ -422,6 +471,8 @@ void __stdcall FireWeapon(DMPlayer* pDMPlayer, int a1, int a2)
 	return pFireWeapon(pDMPlayer, a2, a2);
 }
 
+
+/* Again self explanatory, mapping of release fire calls. HeldTime is total time Held down calculated from HeldFire. */
 typedef int(__stdcall *tReleaseFire)(DMPlayer* pThis, float HeldTime);
 tReleaseFire pReleaseFire;
 
@@ -441,6 +492,8 @@ int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
 	return pReleaseFire(pDMPlayer, HeldTime);
 }
 
+
+/* Self Explantory, hook of Holding fire calls... a2 is unknown*/
 typedef int(__stdcall *tHoldFire)(DMPlayer* pDMPlayer, float HeldTime, int a2);
 tHoldFire pHoldFire;
 
@@ -456,10 +509,15 @@ int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
 	return pHoldFire(pDMPlayer, HeldTime, a2);
 }
 
-typedef void(__thiscall *tApplyDamage)(void* pThis, float* Damage_Amount, int Unk);
-//tApplyDamage pApplyDamage = (tApplyDamage)(0x0051E570);
-tApplyDamage pApplyDamage = (tApplyDamage)(0x004D7A50);
 
+
+/*
+	These are engine functions used for switching weapons and checking if a weapon is available before attempting to switch to it.
+	
+	Due to the fact these are not hooked, I'm curious if the 3rd parameter is responsible for weapon modifiers...
+
+	Weapon modifiers can be found by simply breaking on input query and following the first call though.
+*/
 typedef int(__thiscall *tWeaponCheck)(void* Pthis, int WeaponID, int Unk);
 tWeaponCheck pWeaponCheck = (tWeaponCheck)(0x004E3720);
 
@@ -477,7 +535,12 @@ void SwitchWeapon(void* WeaponPointer, int WeaponID)
 }
 
 
-//Detouring this has proven to be a bitch so it's code-caved instead.
+/* 
+	This is the function responsible for damaging players.
+	Any attempt at detouring this normally has not worked well.
+
+
+*/
 DWORD DamagePlayer_Ret = 0x00;
 DWORD DamagedPlayer = 0x00;
 __declspec(naked) void DamagePlayer() 
@@ -490,6 +553,12 @@ __declspec(naked) void DamagePlayer()
 	
 	}
 
+	/* 
+		If we're not the server we update the pointer of the damage to be 0 so that the client applies no damage.
+		This is a problem, because the damage function is also used to determine if an client should trigger events.
+
+		Need some way to check the pointer which is being damaged and to determine if it's a player or not.
+	*/
 	if (!t4net.server)
 	{
 		__asm 
@@ -520,6 +589,15 @@ __declspec(naked) void DamagePlayer()
 
 }
 
+
+
+/*
+	This hooks into the function that's used to kill players in the game.
+
+	It may be better to do a vtable detour rather than a codecave for this one, as it's possible this is casuing crashes.
+
+	The real problem is getting the internal function to pass parameters properly to the real function.
+*/
 
 DWORD KillPlayer_Ret;
 DWORD KillPlayer_Ret2;
@@ -585,6 +663,12 @@ void TurokEngine::UnCrouch(DMPlayer* thisptr)
 
 }
 
+
+/* Because hooking the death function has proven itself difficult, 
+   In order to prevent the client from killing people I've hooked a function used just before to determine if their health has reached 0.
+   
+   On a client this will always tell them their health is not 0 and should not be responsible for killing them.
+   */
 typedef BOOL(__stdcall *tIsDead)(DMPlayer* pDMPlayer);
 tIsDead pIsDead;
 
@@ -611,7 +695,7 @@ int __stdcall PickupCrash(void* pScreenPtr, int a2)
 }
 
 
-/* The rest of these are not necessarily related to pickup, just OSD in general */
+/* The rest of these are not necessarily related to pickup, just OSD in general and are to fix crashes or potential crashes */
 typedef int(__stdcall *tPickupCrash2)(void* pScreenPtr, int a2);
 tPickupCrash2 pPickupCrash2;
 
@@ -694,9 +778,8 @@ int __stdcall PickupCrash8(void* pScreen, int a2)
 
 
 
-//In the future this will include the model and such, we also need to be sure players are spawning at specific positions, or transfer positions from server snapshots.
-//It's probably best to hook the spawnpoint routine so we can sync spawning.
 
+/* Internal function actually responsible for spawning additional players into the game. */
 DMPlayer* TurokEngine::SpawnPlayer()
 {
 
@@ -705,17 +788,24 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	char *spawn_path = new char[255];
 	ZeroMemory(spawn_path, 255);
 
-	//sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\players\\workerplayer\\workerplayer.atr");
 	sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr");
 	char *spawn_name = new char[20];
 	ZeroMemory(spawn_name, 20);
 
 	sprintf_s(spawn_name, strlen("DMPlayer") + 1, "%s", "DMPlayer");
 
+	/* A position must be supplied to the function we're using to create the player so we'll use a random one. */
 	Vector3 npos_struct;
 	npos_struct.x = 12.0f;
 	npos_struct.y = 10.0f;
 	npos_struct.z = 5.0f;
+
+	/* 
+		We perform various patches when spawning the player, and restore the code after the fact.
+		Each one of these patches handles something different, some may be sure the player isn't added to a rendering loop for first person data.
+
+		Others account for potential crashes in relation to OSD/HUD.
+	*/
 
 	DWORD dwOld;
 	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
@@ -725,6 +815,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
 	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
 	DWORD OrigBytes_2 = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
+	DWORD OrigBytes_3 = *(DWORD*)0x00510BB9; // Unknown increment of an array by 4 near others... testing.
 
 	*(BYTE*)0x004DAD49 = 0xEB;
 
@@ -734,6 +825,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	*/
 	memset((PVOID)0x0050CED2, 0x90, 4); 
 	memset((PVOID)0x00510AF9, 0x90, 4); // This one is for the camera itself.
+	memset((PVOID)0x00510BB9, 0x90, 4); // unknown increment of similar array untested.
 	//.text:00510BB9                 add     dword ptr [esi+4], 4 - another place to potentially apply this patch.
 
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
@@ -742,11 +834,12 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	
 	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
 	memcpy((PVOID)0x00510AF9, &OrigBytes_2, 4); // Restore original Bytes.
+	memcpy((PVOID)0x00510BB9, &OrigBytes_3, 4); // Restore original bytes.
 
 	return nPlayer;
 }
 
-
+/* Apply all of our hooks */
 void TurokEngine::SetModHooks()
 {
 	DWORD dwBack;
