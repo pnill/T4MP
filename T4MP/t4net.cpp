@@ -16,12 +16,18 @@ const int port = 15001;
 void T4Network::Initalize()
 {
 
-	server = (GetPrivateProfileIntA("T4MP", "server", 0, ".\\t4mp.ini") == 1);
-	port = (u_short)GetPrivateProfileIntA("T4MP", "port", 15001, ".\\t4mp.ini");
-	GetPrivateProfileStringA("T4MP", "server_ip", "127.0.0.1", (LPSTR)server_ip, INET_ADDRSTRLEN, ".\\t4mp.ini");
+	char ini_path[255];
+	memset(ini_path, 0x00, 255);
+	GetCurrentDirectory(255, ini_path);
+	strcat_s(ini_path, "\\t4mp.ini");
+
+
+	server = GetPrivateProfileIntA("T4MP", "server", 0, ini_path);
+	port = (u_short)GetPrivateProfileIntA("T4MP", "port", 15001, ini_path);
+	GetPrivateProfileStringA("T4MP", "server_ip", "127.0.0.1", (LPSTR)server_ip, INET_ADDRSTRLEN, ini_path);
 	
 
-	printf("Reading 'server' entry: %i\r\n", GetPrivateProfileIntA("T4MP", "server", 0, ".\\t4mp.ini"));
+	printf("Reading 'server' entry: %i\r\n", GetPrivateProfileIntA("T4MP", "server", 0, ini_path));
 	if (server)
 		printf("We're the host\r\n");
 	
@@ -69,7 +75,7 @@ void T4Network::Initalize()
 	 }
 
 
-	 printf("WinSock Intialized and bound to %d\r\n", port);
+	 printf("WinSock Initialized and bound to %d\r\n", port);
 }
 
 void T4Network::SendSnapShot()

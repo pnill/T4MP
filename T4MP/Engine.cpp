@@ -382,9 +382,11 @@ int __stdcall player_respawn_crashfix(void* thisptr)
 	Literally a method used to spawn objects in the engine.
 	Spawning players utilizes this, but typically it's only used for pickups or other things with a static location.
 
-	In theory this could be used to sync specific powerups which are usually spawned with RNG (Speed Increase, Health Increase, Damage Increase, etc).
+	In theory this could be used to sync specific power ups which are usually spawned with RNG (Speed Increase, Health Increase, Damage Increase, etc).
 
 */
+
+
 
 typedef int(__stdcall *tspawn_object)(void* thisptr, int a2, char* object_name, char* object_path, Vector3* pos_struct, int a6);
 tspawn_object pspawn_object;
@@ -403,6 +405,11 @@ int __stdcall spawn_object_engine(void* thisptr, int a2, char* object_name, char
 	Multiplayerjoin.hst is hooked to make sure the second  player never joins the game and as a result their player is not spawned, and there is no second screen.
 
 	Options.hst is hooked to make sure AutoAim is disabled as it will cause unfair host advantage and major de-sync for clients believing they've done damage.
+
+	I'm going to want to document this further to force map loading of specific maps and force the game into the "MP" mode.
+
+	UPDATE: The new plan is not to force load specific maps through code but use the boot sequence to do it, the launcher will handle teling the game which maps to load,
+	hooks will be created to load .t4mp versions of specific files.
 */
 
 
@@ -423,7 +430,7 @@ int __stdcall load_history(void* thisptr, char* hist_file)
 	if (!strcmp("$\\Data\\History\\Options.hst", hist_file))
 	{
 		DWORD data_area = *(DWORD*)(ret + 0x04);
-		*(BYTE*)(data_area) = 0; // turn autoaim off.
+		*(BYTE*)(data_area) = 0; // turn auto aim off.
 	}
 
 	return ret;
@@ -452,7 +459,7 @@ DMPlayer* TurokEngine::GetDMPlayer(int index)
 }
 
 
-/* Self Explanatory, the intial press of a fire button (tab or left mouse down) previous to release or hold */
+/* Self Explanatory, the initial press of a fire button (tab or left mouse down) previous to release or hold */
 typedef void(__stdcall *tFireWeapon)(DMPlayer *pThis, int a1, int a2);
 tFireWeapon pFireWeapon;
 
@@ -493,7 +500,7 @@ int __stdcall ReleaseFire(DMPlayer* pDMPlayer, float HeldTime)
 }
 
 
-/* Self Explantory, hook of Holding fire calls... a2 is unknown*/
+/* Self Explanatory, hook of Holding fire calls... a2 is unknown*/
 typedef int(__stdcall *tHoldFire)(DMPlayer* pDMPlayer, float HeldTime, int a2);
 tHoldFire pHoldFire;
 
@@ -594,7 +601,7 @@ __declspec(naked) void DamagePlayer()
 /*
 	This hooks into the function that's used to kill players in the game.
 
-	It may be better to do a vtable detour rather than a codecave for this one, as it's possible this is casuing crashes.
+	It may be better to do a vtable detour rather than a codecave for this one, as it's possible this is causing crashes.
 
 	The real problem is getting the internal function to pass parameters properly to the real function.
 */
@@ -663,8 +670,7 @@ void TurokEngine::UnCrouch(DMPlayer* thisptr)
 
 }
 
-
-/* Because hooking the death function has proven itself difficult, 
+/* Because hooking the death function has proved itself difficult, 
    In order to prevent the client from killing people I've hooked a function used just before to determine if their health has reached 0.
    
    On a client this will always tell them their health is not 0 and should not be responsible for killing them.
@@ -682,10 +688,29 @@ BOOL __stdcall IsDead(DMPlayer* pDMPlayer)
 
 }
 
+
+typedef char*(__stdcall *tload_actor_instance)(void* pThis, char* a2, int a3);
+tload_actor_instance pload_actor_instance;
+
+char* __stdcall load_actor_instance(void* pThis, char* ati_path, int a3)
+{
+
+	/*
+	* The first instance file loaded is Begin.ati, 
+	*  We replace this with our modified multiplayer join; this way we can force load MP into the map specified by the history file.
+	*/
+	if (strstr(ati_path, "Begin.ati"))
+	{
+		strcpy(ati_path, "$\\T4MP\\multiplayerjoin.ati");
+	}
+
+	return pload_actor_instance(pThis, ati_path, a3);
+}
+
 typedef int(__stdcall *tPickupCrash)(void* pScreenPtr, int a2);
 tPickupCrash pPickupCrash;
 
-/* Fixes jump boots pickup, disables it from attempting to add hud for players other than the local one. */
+/* Fixes jump boots pickup, disables it from attempting to add HUD for players other than the local one. */
 int __stdcall PickupCrash(void* pScreenPtr, int a2)
 {
 	if (!pScreenPtr)
@@ -815,7 +840,8 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
 	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
 	DWORD OrigBytes_2 = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
-	DWORD OrigBytes_3 = *(DWORD*)0x00510BB9; // Unknown increment of an array by 4 near others... testing.
+	DWORD OrigBytes_3 = *(DWORD*)0x00510BB9; // Unknown impact, tested no crash.
+	//DWORD Origbytes_4 = *(DWORD*)0x00549773; // Unknown - testing. - crash don't use.
 
 	*(BYTE*)0x004DAD49 = 0xEB;
 
@@ -825,8 +851,11 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	*/
 	memset((PVOID)0x0050CED2, 0x90, 4); 
 	memset((PVOID)0x00510AF9, 0x90, 4); // This one is for the camera itself.
-	memset((PVOID)0x00510BB9, 0x90, 4); // unknown increment of similar array untested.
+	memset((PVOID)0x00510BB9, 0x90, 4); // tested unknown impact.
+	//	memset((PVOID)0x00549773, 0x90, 4); // testing... - crash don't use
+
 	//.text:00510BB9                 add     dword ptr [esi+4], 4 - another place to potentially apply this patch.
+	//.text:00549773 add     dword ptr [esi+4], 4 - called from within weapon construction.
 
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
 
@@ -835,6 +864,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
 	memcpy((PVOID)0x00510AF9, &OrigBytes_2, 4); // Restore original Bytes.
 	memcpy((PVOID)0x00510BB9, &OrigBytes_3, 4); // Restore original bytes.
+	//memcpy((PVOID)0x00549773, &Origbytes_4, 4); // Restore original bytes. - crash dont use.
 
 	return nPlayer;
 }
@@ -872,9 +902,10 @@ void TurokEngine::SetModHooks()
 
 	VirtualProtect(player_death2, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
-	pcamera_hook3 = (tcamera_hook3)DetourClassFunc((BYTE*)0x0050E310, (BYTE*)camera_hook3, 13);
+	/* Possibly no longer needed, requires additional testing */
+	//pcamera_hook3 = (tcamera_hook3)DetourClassFunc((BYTE*)0x0050E310, (BYTE*)camera_hook3, 13);
 
-	VirtualProtect(pcamera_hook3, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	//VirtualProtect(pcamera_hook3, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pdeath_message_hook = (tdeath_message_hook)DetourClassFunc((BYTE*)0x4DCFC0, (BYTE*)death_message, 13);
 
@@ -891,6 +922,7 @@ void TurokEngine::SetModHooks()
 	pplayer_respawn_crashfix = (tplayer_respawn_crashfix)DetourClassFunc((BYTE*)0x4D91D0, (BYTE*)player_respawn_crashfix, 12);
 
 	VirtualProtect(pplayer_respawn_crashfix, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
 
 	pFireWeapon = (tFireWeapon)DetourClassFunc((BYTE*)0x004DBC70, (BYTE*)FireWeapon, 9);
 	
@@ -949,6 +981,11 @@ void TurokEngine::SetModHooks()
 	Codecave(0x004EE7F0, screen_effect_osd, 1);
 	Codecave(0x004E08B0, DamagePlayer, 4);
 	Codecave(0x004DE1B0, KillPlayer, 2);
+
+	/* Hook the level load sequence so we can force the game into multiplayer automatically for the launcher */
+	pload_actor_instance = (tload_actor_instance)DetourClassFunc((BYTE*)0x00512AF0, (BYTE*)load_actor_instance, 8);
+	VirtualProtect(pload_actor_instance, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
 
 	t4net.Initalize();
 	

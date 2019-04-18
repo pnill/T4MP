@@ -8,7 +8,7 @@ void DebugAction()
 {
 	
 	
-
+	//For testing specific actions.
 	if (GetAsyncKeyState(VK_RSHIFT))
 	{
 	//	ChangeDeath();
@@ -18,8 +18,14 @@ void DebugAction()
 
 DWORD WINAPI Intialize(LPVOID lpParam)
 {
+	/* 
+		Using an 3rd party hook which forces windowed mode and adds some input improvements to the game.
+		Configured using hook.ini which the server browser/launcher will modify in the future.
+	*/
+
 	HINSTANCE hook_handle = LoadLibraryA("D3dHook.dll");
-	if (GetModuleHandle(L"Turok4.exe"))
+
+	if (GetModuleHandle("Turok4.exe"))
 	{
 		AllocConsole();
 		FILE *cout;
@@ -27,10 +33,11 @@ DWORD WINAPI Intialize(LPVOID lpParam)
 
 		Engine.SetModHooks(); // Setup engine hooks.
 		
-		while (true)
-		{
-			DebugAction();
-		}
+		// Some debug code...
+		//while (true)
+		//{
+		//	DebugAction();
+		//}
 	}
 	return 0;
 }
