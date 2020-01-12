@@ -46,8 +46,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Development\protobuf-3.4.1\src\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Development\protobuf-3.4.1\cmake\build\release;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Development\protobuf-3.4.1\src\;D:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Development\protobuf-3.4.1\cmake\build\release;D:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -88,6 +88,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="d3d9.cpp" />
+    <ClCompile Include="D3D9\d3d9dev.cpp" />
+    <ClCompile Include="D3D9\d3d9int.cpp" />
+    <ClCompile Include="D3D9\d3d9tex.cpp" />
+    <ClCompile Include="D3D9\T4Console.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -104,6 +109,11 @@
     <ClCompile Include="t4net.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="d3d9.h" />
+    <ClInclude Include="D3D9\d3d9dev.h" />
+    <ClInclude Include="D3D9\d3d9int.h" />
+    <ClInclude Include="D3D9\d3d9tex.h" />
+    <ClInclude Include="D3D9\T4Console.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Hook.h" />

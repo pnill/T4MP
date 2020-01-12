@@ -1,0 +1,408 @@
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <windows.h>
+#include "T4Console.h"
+#include "../Engine.h"
+
+#include <time.h>
+
+extern HWND CurWindow;
+
+ConsoleCommands::ConsoleCommands() {
+	command = "";
+	caretPos = 0;
+}
+
+void ConsoleCommands::writePreviousOutput(std::string msg) {
+	std::vector<std::string>::iterator it;
+	it = prevOutput.begin();
+	prevOutput.insert(it, msg);
+
+	if (prevOutput.size() > 18) {
+		prevOutput.pop_back();
+	}
+
+}
+
+void ConsoleCommands::writePreviousCommand(std::string msg) {
+	std::vector<std::string>::iterator it;
+	it = prevCommands.begin();
+	prevCommands.insert(it, msg);
+
+	if (prevCommands.size() > 18) {
+		prevCommands.pop_back();
+	}
+}
+
+time_t start = time(0);
+BOOL ConsoleCommands::handleInput(WPARAM wp) {
+
+	if (CurWindow != GetForegroundWindow())
+	{
+		return false;
+	}
+
+	//double seconds_since_start = difftime(time(0), start);
+	if (wp == VK_OEM_3) {
+		//if (seconds_since_start > 0.1) {
+			console = !console;
+
+			if(console == false)
+				*(BYTE*)(0x004D0466) = 0x74; // enable game input
+		//	start = time(0);
+		//}
+		return false;
+	}
+	switch (wp) {
+	case '\b':   // backspace
+	{
+		if (console) {
+			if (caretPos > 0)
+			{
+				command.erase(caretPos - 1, 1);
+				caretPos -= 1;
+			}
+			return true;
+		}
+	}
+	break;
+
+	case '\r':    // return/enter
+	{
+		if (console) {
+			this->writePreviousCommand(command);
+
+	
+			handle_command(command);
+
+			command = "";
+			caretPos = 0;
+			return true;
+		}
+	}
+	break;
+
+	default:
+		if (console) {
+
+			if (wp == VK_UP)
+			{
+				command = "";
+				caretPos = 0;
+				if (prevCommands.size() > 0  && previous_command_index <= prevCommands.size()-1)
+				{
+					command = prevCommands[previous_command_index];
+					caretPos = command.length();
+					previous_command_index++;
+				}
+				return true;
+			}
+
+			if (wp == VK_DOWN)
+			{
+				command = "";
+				caretPos = 0;
+
+				if (prevCommands.size() > 0 && previous_command_index > 0)
+				{
+					previous_command_index--;
+					command = prevCommands[previous_command_index];
+					caretPos = command.length();
+				}
+				return true;
+			}
+
+			if (wp == VK_END)
+			{
+				caretPos = command.length();
+				return true;
+			}
+
+			if (wp == VK_HOME)
+			{
+				caretPos = 0;
+				return true;
+			}
+
+			if (wp == VK_LEFT)
+			{
+				if(caretPos)
+					caretPos--;
+
+				return true;
+			}
+
+			if (wp == VK_RIGHT)
+			{
+				if (caretPos != command.length())
+					caretPos++;
+
+				return true;
+			}
+
+
+			if (((wp >= 0x30 && wp <= 0x5A) || wp == 0x20 || wp == VK_OEM_MINUS || wp == VK_OEM_COMMA || wp == VK_OEM_PERIOD || wp == VK_OEM_MINUS || wp == VK_OEM_PLUS ||
+				wp == VK_OEM_1 || wp == VK_OEM_2 || wp == VK_OEM_3 || wp == VK_OEM_4 || wp == VK_OEM_5 || wp == VK_OEM_6 || wp == VK_OEM_7)) {
+				
+				
+				
+				switch (wp)
+				{
+					case VK_OEM_COMMA:
+						wp = ',';
+					break;
+					
+					case VK_OEM_PERIOD:
+						wp = '.';
+					break;
+
+					case VK_OEM_MINUS:
+						wp = '-';
+					break;
+
+					case VK_OEM_1:
+						wp = ';';
+					break;
+
+					case VK_OEM_2:
+						wp = '/';
+					break;
+
+					case VK_OEM_4:
+						wp = '[';
+					break;
+
+					case VK_OEM_5:
+						wp = '\\';
+					break;
+
+					case VK_OEM_6:
+						wp = ']';
+					break;
+
+					case VK_OEM_7:
+						wp = '\'';
+					break;
+
+					case VK_OEM_PLUS:
+						wp = '=';
+					break;
+				}
+			
+
+				
+				if (GetAsyncKeyState(0x10) & 0x8000 || GetAsyncKeyState(0xA0) & 0x8000 || GetAsyncKeyState(0xA1) & 0x8000) {
+		
+					switch (wp)
+					{
+						case '1':
+							wp = '!';
+						break;
+						
+						case '-':
+							wp = '_';
+						break;
+
+						case '2':
+							wp = '@';
+						break;
+						
+						case '3':
+							wp = '#';
+						break;
+
+						case '4':
+							wp = '$';
+						break;
+
+						case '5':
+							wp = '%';
+						break;
+
+						case '6':
+							wp = '^';
+						break;
+
+						case '7':
+							wp = '&';
+						break;
+
+						case '8':
+							wp = '*';
+						break;
+
+						case '9':
+							wp = '(';
+						break;
+
+						case '0':
+							wp = ')';
+						break;
+
+						case '=':
+							wp = '+';
+						break;
+
+						case '[':
+							wp = '{';
+						break;
+
+						case ']':
+							wp = '}';
+						break;
+
+						case '\'':
+							wp = '"';
+						break;
+
+						case ';':
+							wp = ':';
+						break;
+
+						case ',':
+							wp = '<';
+						break;
+
+						case '.':
+							wp = '>';
+						break;
+
+						case '/':
+							wp = '?';
+						break;
+
+						case '\\':
+							wp = '|';
+						break;
+
+					
+
+						default:
+							wp = toupper(wp);
+						break;
+					}
+
+				}
+				else {
+					wp = tolower(wp);
+				}
+				command.insert(caretPos, 1, (char)wp);
+				caretPos += 1;
+				return true;
+			}
+		}
+		break;
+	}
+	return false;
+}
+
+
+void ConsoleCommands::output(std::wstring result) {
+		std::string str(result.begin(), result.end());
+		writePreviousCommand(str);
+}
+
+void ConsoleCommands::display(std::string output)
+{
+	writePreviousCommand(output);
+}
+
+bool ConsoleCommands::isNum(const char *s) {
+	int i = 0;
+	while (s[i]) {
+		//if there is a letter in a string then string is not a number
+		if (isalpha(s[i])) {
+			return false;
+		}
+		i++;
+	}
+	return true;
+}
+
+void ConsoleCommands::handle_command(std::string command) {
+
+	if (command == "pointers")
+	{
+
+	/*
+		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
+	if (TurokEngine->pT4Game)
+		if (TurokEngine->pT4Game->pEngineObjects)
+			if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index])
+				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor)
+				{
+					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer)
+						return TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer;
+				}
+				else
+				{
+					return (DMPlayer*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pPlayer;
+				}
+*/
+
+		void * ptr1 = 0;
+		void*  ptr2 = 0;
+		void*  ptr3 = 0;
+		void*  ptr4 = 0;
+		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
+		if (TurokEngine->pT4Game)
+			if (TurokEngine->pT4Game->pEngineObjects)
+			{
+				ptr1 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0];
+				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor)
+				{
+					ptr2 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor;
+					ptr3 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
+					ptr4 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer->pHealth;
+				}
+			}
+
+		this->writePreviousOutput("local ptrs:");
+
+		std::stringstream otptr1;
+		otptr1 << "pBlendedCamera: " << std::hex << ptr1;
+
+		std::stringstream otptr2;
+		otptr2 << "pActor: " << std::hex << ptr2;
+
+		std::stringstream otptr3;
+		otptr3 << "pDMPlayer: " << std::hex << ptr3;
+
+		std::stringstream otptr4;
+		otptr4 << "pHealth: " << std::hex << ptr4;
+
+		this->writePreviousOutput(otptr1.str());
+		this->writePreviousOutput(otptr2.str());
+		this->writePreviousOutput(otptr3.str());
+		this->writePreviousOutput(otptr4.str());
+
+
+	}
+
+	if (command == "spawn")
+	{
+		TurokEngine tengine;
+		tengine.SpawnPlayer();
+	}
+
+	if (command == "attack")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+
+		p->fire_weapon(0, 0);
+		p->fire_release(0);
+	}
+
+	if (command == "walk")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		p->Walk_backward = 1.0f;
+		p->bThirdPerson = false;
+	}
+
+
+}

@@ -19,6 +19,9 @@
     <Filter Include="Source Files\Main-T4MP">
       <UniqueIdentifier>{15bd5615-280c-4e80-88ce-aa3f0c66ad49}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\D3D9">
+      <UniqueIdentifier>{89c18619-5c68-4a4c-ad19-440bac1ddc1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -45,6 +48,21 @@
     <ClCompile Include="t4mp.pb.cc">
       <Filter>Source Files\Main-T4MP</Filter>
     </ClCompile>
+    <ClCompile Include="d3d9.cpp">
+      <Filter>Source Files\D3D9</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9\d3d9int.cpp">
+      <Filter>Source Files\D3D9</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9\d3d9dev.cpp">
+      <Filter>Source Files\D3D9</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9\d3d9tex.cpp">
+      <Filter>Source Files\D3D9</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9\T4Console.cpp">
+      <Filter>Source Files\D3D9</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Debug.h">
@@ -67,6 +85,21 @@
     </ClInclude>
     <ClInclude Include="t4mp.pb.h">
       <Filter>Source Files\Main-T4MP</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9.h">
+      <Filter>Source Files\D3D9</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9\d3d9int.h">
+      <Filter>Source Files\D3D9</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9\d3d9dev.h">
+      <Filter>Source Files\D3D9</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9\d3d9tex.h">
+      <Filter>Source Files\D3D9</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9\T4Console.h">
+      <Filter>Source Files\D3D9</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

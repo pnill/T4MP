@@ -39,10 +39,83 @@ __declspec(naked) void screen_effect_osd() // Fix crash when new player is takin
 	}
 }
 
+/*
+	We need to control the initial value set to the loop as well.
+*/
+DWORD osd_health_fix_ret_2 = 0;
+__declspec(naked) void osd_health_fix2()
+{
+	__asm {
+		pop osd_health_fix_ret_2
+		/*
+		.text:0050E293                 mov     edi, [ebp+0E8h]
+		.text:0050E299                 cmp     edi, [ebp+0ECh]
+		.text:0050E29F                 jz      short loc_50E2F5
+		*/
+		mov edi,[ebp+0xE8]
+		check_osd:
+			mov ecx,[edi] // we can use ecx and not have to restore it because the operation just after this overwrites it
+			mov ecx,[ecx]
+			cmp ecx,0x00658CE0
+			jz avoid_dmplayer
+			push osd_health_fix_ret_2
+			ret
+
+		avoid_dmplayer:
+			add edi, 4
+			jmp check_osd
+
+		
+	}
+}
+
+/*
+	We control the loop and attempt to skip the things related to the additional players,
+	will probably need to add additional entries here for other screen effects but it should fix at least the health and ammo displays.
+*/
+DWORD osd_health_fix_ret = 0;
+__declspec(naked) void osd_health_fix() 
+{
+	__asm {
+		pop osd_health_fix_ret;	
+		add edi,4 // we noped this and moved it up
+		PUSHAD
+		PUSHFD
+		check_osd:
+			mov eax, [edi]
+			cmp eax,0
+			jz return_normal
+			mov eax, [eax]
+			cmp eax, 0x00658CE0
+			jz avoid_dmplayer
+			jmp return_normal
+
+	
+			/*
+				.text:0050E2E7 mov     eax, [ebp + 0ECh]
+				.text : 0050E2ED add     edi, 4 // we're nopping this
+				.text : 0050E2F0 cmp     edi, eax
+				.text : 0050E2F2 jnz     short loc_50E2A8
+			*/
+
+		return_normal:
+		POPFD
+		POPAD
+
+		mov eax,[ebp + 0x0EC]
+		push osd_health_fix_ret
+		ret
+	
+		avoid_dmplayer:
+			add edi,4
+			jmp check_osd
 
 
+	}
+}
 
-/* Currently this is not in-use any longer. */
+
+/* Currently this is not in-use */
 DWORD nPlayerPTR = 0x00000000;
 DWORD lPlayer = 0x00000000;
 DWORD CameraLoop1_Ret = 0;
@@ -385,9 +458,6 @@ int __stdcall player_respawn_crashfix(void* thisptr)
 	In theory this could be used to sync specific power ups which are usually spawned with RNG (Speed Increase, Health Increase, Damage Increase, etc).
 
 */
-
-
-
 typedef int(__stdcall *tspawn_object)(void* thisptr, int a2, char* object_name, char* object_path, Vector3* pos_struct, int a6);
 tspawn_object pspawn_object;
 
@@ -802,7 +872,7 @@ int __stdcall PickupCrash8(void* pScreen, int a2)
 }
 
 
-
+DWORD WeapOrigBytes = 0;
 
 /* Internal function actually responsible for spawning additional players into the game. */
 DMPlayer* TurokEngine::SpawnPlayer()
@@ -837,42 +907,52 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	VirtualProtect((BYTE*)0x0050CED2, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x00510AF9, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 
+
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
 	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
-	DWORD OrigBytes_2 = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
-	DWORD OrigBytes_3 = *(DWORD*)0x00510BB9; // Unknown impact, tested no crash.
-	//DWORD Origbytes_4 = *(DWORD*)0x00549773; // Unknown - testing. - crash don't use.
+	DWORD WeapOrigBytes = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
 
-	*(BYTE*)0x004DAD49 = 0xEB;
+	*(BYTE*)0x004DAD49 = 0xEB; // disable OSD weapon related
 
 	/* 
 		Nop the increment for the camera array pointer. 
 		This should stop the game from doing things like displaying water screen effects for everyone.
 	*/
 	memset((PVOID)0x0050CED2, 0x90, 4); 
-	memset((PVOID)0x00510AF9, 0x90, 4); // This one is for the camera itself.
-	memset((PVOID)0x00510BB9, 0x90, 4); // tested unknown impact.
-	//	memset((PVOID)0x00549773, 0x90, 4); // testing... - crash don't use
+	
+	/* 
+	   In this same area there's a camera that can be stopped from initializing and it would probably remove the need for the other OSD fix, however...
+	   This also results in there being issues with what appears to be first person animations trying to get called for the weapon
+	 
+		.text:004D4E61 jz     short loc_4D4E74 // EB(jmp) on spawn new player
 
-	//.text:00510BB9                 add     dword ptr [esi+4], 4 - another place to potentially apply this patch.
-	//.text:00549773 add     dword ptr [esi+4], 4 - called from within weapon construction.
+	 */
 
+	memset((PVOID)0x00510AF9, 0x90, 4); // Causes FPS Weapon bug - 0x004D4E27
+	
+	
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
 
 	*(BYTE*)0x004DAD49 = OrigByte;
 	
 	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
-	memcpy((PVOID)0x00510AF9, &OrigBytes_2, 4); // Restore original Bytes.
-	memcpy((PVOID)0x00510BB9, &OrigBytes_3, 4); // Restore original bytes.
-	//memcpy((PVOID)0x00549773, &Origbytes_4, 4); // Restore original bytes. - crash dont use.
+	memcpy((PVOID)0x00510AF9, &WeapOrigBytes, 4); // Restore original Bytes.
 
 	return nPlayer;
 }
+
 
 /* Apply all of our hooks */
 void TurokEngine::SetModHooks()
 {
 	DWORD dwBack;
+
+	/*
+		There's an OSD loop where text gets rendered for all cameras these two codecaves take care of that loop,
+		It was possible to determine a specific object type that the additionally spawned players were using and stop the game from rendering data for them.
+	*/
+	Codecave(0x0050E2E7, osd_health_fix, 4);
+	Codecave(0x0050E293, osd_health_fix2, 1);
 
 	pload_history = (tload_history)DetourClassFunc((BYTE*)0x529650, (BYTE*)load_history, 16);
 
