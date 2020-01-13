@@ -589,21 +589,40 @@ int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
 		t4net.fire_hold_time = HeldTime;
 		t4net.fire_hold = true;
 	}
-
+	
 	return pHoldFire(pDMPlayer, HeldTime, a2);
 }
 
 
 /* Triggered when using alternate fire mode (right mouse click) */
-typedef int(__stdcall *tModifyWeapon)(DMPlayer* pDMPlayer);
+typedef int(__stdcall *tModifyWeapon)(DMPlayer* pDMPlayer, int a1, int a2);
 tModifyWeapon pModifyWeapon;
 
-int __stdcall ModifyWeapon(DMPlayer* pDMPlayer)
+int __stdcall ModifyWeapon(DMPlayer* pDMPlayer,int a1, int a2)
 {
+	TurokEngine tengine;
 
-	return pModifyWeapon(pDMPlayer);
+	if (pDMPlayer == tengine.GetDMPlayer(0))
+	{
+		t4net.modify_weapon = true;
+	}
+
+
+	if (!t4net.server)
+		return 0;
+
+	return pModifyWeapon(pDMPlayer,a1,a2);
 }
 
+int WeaponModify(DMPlayer* pDMPlayer)
+{
+	TurokEngine tengine;
+
+	if (pDMPlayer == tengine.GetDMPlayer(0))
+		t4net.modify_weapon = false;
+
+	return pModifyWeapon(pDMPlayer, 0, 0);
+}
 
 /*
 	These are engine functions used for switching weapons and checking if a weapon is available before attempting to switch to it.
@@ -1066,11 +1085,11 @@ void TurokEngine::SetModHooks()
 	VirtualProtect(pReleaseFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pHoldFire = (tHoldFire)DetourClassFunc((BYTE*)0x4D6DF0, (BYTE*)HoldFire, 11);
+	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
-	pModifyWeapon = (tModifyWeapon)DetourClassFunc((BYTE*)0x004C65C0, (BYTE*)ModifyWeapon, 12);
+	pModifyWeapon = (tModifyWeapon)DetourClassFunc((BYTE*)0x4D8F20, (BYTE*)ModifyWeapon, 9);
 	VirtualProtect(pModifyWeapon, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
-	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pIsDead = (tIsDead)DetourClassFunc((BYTE*)0x00486110, (BYTE*)IsDead, 10);
 	

@@ -244,7 +244,7 @@ public:
 	virtual void Function137(); //
 	virtual void Function138(); //
 	virtual void Function139(); //
-	virtual void Function140(); //
+	virtual void modify_weapon(int a1, int a2); //
 	virtual void Function141(); //
 	virtual void Function142(); //
 	virtual void Function143(); //

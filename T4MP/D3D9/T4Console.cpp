@@ -325,23 +325,6 @@ void ConsoleCommands::handle_command(std::string command) {
 
 	if (command == "pointers")
 	{
-
-	/*
-		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
-	if (TurokEngine->pT4Game)
-		if (TurokEngine->pT4Game->pEngineObjects)
-			if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index])
-				if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor)
-				{
-					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer)
-						return TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pActor->pDMPlayer;
-				}
-				else
-				{
-					return (DMPlayer*)TurokEngine->pT4Game->pEngineObjects->pCameraArray[index]->pPlayer;
-				}
-*/
-
 		void * ptr1 = 0;
 		void*  ptr2 = 0;
 		void*  ptr3 = 0;
@@ -396,12 +379,59 @@ void ConsoleCommands::handle_command(std::string command) {
 		p->fire_release(0);
 	}
 
+
+
+	if (command == "hold_attack")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		p->fire_weapon(0, 0);
+		p->fire_held(1.0f, 0);
+	}
+
+	if (command == "release_attack")
+	{
+		TurokEngine tengine;
+		DMPlayer* p = tengine.GetDMPlayer(1);
+		p->fire_release(1.0f);
+	}
+
 	if (command == "walk")
 	{
 		TurokEngine tengine;
 		DMPlayer *p = tengine.GetDMPlayer(1);
 		p->Walk_backward = 1.0f;
 		p->bThirdPerson = false;
+	}
+
+	if (command == "jump")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		p->jump(0, 15.0f);
+	}
+
+	if (command == "switch_weapon")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		p->pWeaponWheel->bHas_SpikeGrenade = 1;
+		p->pWeaponWheel->bHas_SpikeGrenade2 = 1;
+		p->pWeaponWheel->SpikeGrenade_Ammo = 50;
+		p->pWeaponWheel->SpikeGrenade_Ammo2 = 50;
+		p->pWeaponWheel->SpikeGrenade_Ammo3 = 50;
+		
+		
+		SwitchWeapon(&p->pWeapon, p->pWeaponWheel->SpikeGrenadeID);
+
+	}
+
+	if (command == "modify_weapon")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		//p->modify_weapon(0, 0);
+		WeaponModify(p);
 	}
 
 

@@ -42,6 +42,7 @@ message PlayerSnap
 		float Weapon_switch_time = 18;
 		int32 Weapon_slot = 19;
 		int32 packet_sequence = 20;
+		bool modify_weapon = 21;
 
 };
 
@@ -132,6 +133,7 @@ message PlayerSnap
 			WeaponWheel weapons = 22;
 			int32 index = 23;
 			int32 death_type = 24;
+			bool modify_weapon = 25;
 			
 		};
 

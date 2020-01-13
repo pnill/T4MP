@@ -18,6 +18,7 @@ class NetworkPlayer
 		bool crouch_set = false;
 		bool jump_set = false;
 
+		bool modify_weapon = false;
 		bool fire_set = false;
 		bool fire_hold = false;
 		float fire_hold_time = 0.0f;
@@ -55,6 +56,7 @@ public:
 	std::vector<NetworkPlayer*> netplayers;
 
 	bool fire_set = false;
+	bool modify_weapon = false;
 	bool fire_hold = false;
 	bool fire_release = false;
 	float fire_hold_time = 0.0f;

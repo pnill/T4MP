@@ -78,6 +78,9 @@ void T4Network::Initalize()
 	 printf("WinSock Initialized and bound to %d\r\n", port);
 }
 
+/* 
+	This is responsible for the server sending data to all clients.
+*/
 void T4Network::SendSnapShot()
 {
 
@@ -166,6 +169,12 @@ void T4Network::SendSnapShot()
 			player_data->set_jump(true);
 			*/
 
+		if (modify_weapon)
+		{
+			player_data->set_modify_weapon(true);
+			modify_weapon = false;
+		}
+
 		if (fire_set)
 		{
 			player_data->set_fire(true);
@@ -182,6 +191,7 @@ void T4Network::SendSnapShot()
 			player_data->set_fire_release(true);
 			player_data->set_fire_release_time(fire_release_time);
 		}
+
 
 
 		/* POS Data */
@@ -275,6 +285,11 @@ void T4Network::SendSnapShot()
 				player_weaponwheel->set_crossbow_poison_ammo(player_weapon->CrossBow_Poison_Ammo);
 			}
 
+			if (update_player->modify_weapon)
+			{
+				player_data->set_modify_weapon(true);
+			}
+
 			if (update_player->fire_set)
 			{
 				player_data->set_fire(true);
@@ -335,11 +350,11 @@ void T4Network::SendSnapShot()
 
 	/* Now that the entire packet has been built time to send it out to each individual player */
 
-	char* SnapPacket = new char[snappak.ByteSize()];
+	char* SnapPacket = new char[snappak.ByteSizeLong()];
 
-	ZeroMemory(SnapPacket, snappak.ByteSize());
+	ZeroMemory(SnapPacket, snappak.ByteSizeLong());
 
-	snappak.SerializeToArray(SnapPacket, snappak.ByteSize());
+	snappak.SerializeToArray(SnapPacket, snappak.ByteSizeLong());
 
 
 	/* Re-loop the network array and start sending the packet out */
@@ -350,7 +365,7 @@ void T4Network::SendSnapShot()
 		playerAddr.sin_addr.s_addr = net_player->ipaddr;
 		playerAddr.sin_family = AF_INET;
 
-		sendto(serverSock, SnapPacket, snappak.ByteSize(), 0, (SOCKADDR*)&playerAddr, sizeof(playerAddr));
+		sendto(serverSock, SnapPacket, snappak.ByteSizeLong(), 0, (SOCKADDR*)&playerAddr, sizeof(playerAddr));
 
 	}
 	
@@ -401,9 +416,9 @@ void T4Network::ConnectToServer()
 
 	char* ConnectPak = new char[SendingPak.ByteSize()];
 
-	ZeroMemory(ConnectPak, SendingPak.ByteSize());
+	ZeroMemory(ConnectPak, SendingPak.ByteSizeLong());
 
-	SendingPak.SerializeToArray(ConnectPak, SendingPak.ByteSize());
+	SendingPak.SerializeToArray(ConnectPak, SendingPak.ByteSizeLong());
 
 	struct sockaddr_in send_to;
 	send_to.sin_family = AF_INET;
@@ -411,7 +426,7 @@ void T4Network::ConnectToServer()
 	inet_pton(AF_INET, server_ip, &send_to.sin_addr.s_addr);
 
 
-	int send = sendto(serverSock, ConnectPak, SendingPak.ByteSize(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
+	int send = sendto(serverSock, ConnectPak, SendingPak.ByteSizeLong(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
 	if (send == SOCKET_ERROR)
 	{
 		printf("Socket error on send: %08X\r\n", WSAGetLastError());
@@ -421,6 +436,9 @@ void T4Network::ConnectToServer()
 	delete[] ConnectPak;
 }
 
+/* 
+	This is where each client sends their current data to the server.
+*/
 void T4Network::SendPlayerSnapShot()
 {
 	Packet PlayerSnapPacket;
@@ -451,6 +469,11 @@ void T4Network::SendPlayerSnapShot()
 	
 
 		/* need to do jump, crouch, fire, fire_release, fire_hold still*/
+		if (modify_weapon)
+		{
+			player_snap->set_modify_weapon(true);
+		}
+
 		if (fire_set)
 		{
 			player_snap->set_fire(true);
@@ -468,10 +491,10 @@ void T4Network::SendPlayerSnapShot()
 			player_snap->set_fire_release(true);
 		}
 
-		char* playersnap_packet = new char[PlayerSnapPacket.ByteSize()];
-		ZeroMemory(playersnap_packet, PlayerSnapPacket.ByteSize());
+		char* playersnap_packet = new char[PlayerSnapPacket.ByteSizeLong()];
+		ZeroMemory(playersnap_packet, PlayerSnapPacket.ByteSizeLong());
 		
-		PlayerSnapPacket.SerializeToArray(playersnap_packet, PlayerSnapPacket.ByteSize());
+		PlayerSnapPacket.SerializeToArray(playersnap_packet, PlayerSnapPacket.ByteSizeLong());
 
 		struct sockaddr_in send_to;
 		send_to.sin_family = AF_INET;
@@ -479,7 +502,7 @@ void T4Network::SendPlayerSnapShot()
 		inet_pton(AF_INET, server_ip, &send_to.sin_addr.s_addr);
 
 
-		sendto(serverSock, playersnap_packet, PlayerSnapPacket.ByteSize(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
+		sendto(serverSock, playersnap_packet, PlayerSnapPacket.ByteSizeLong(), 0, (LPSOCKADDR)&send_to, sizeof(send_to));
 
 		playersnap_pack_sequence++;
 	}
@@ -561,7 +584,9 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		if (pPlayer->Weapon_slot != pPlayerSnap.weapon_slot())
 			SwitchWeapon(&pPlayer->pWeapon, (pPlayerSnap.weapon_slot()) + 1);
 
-	
+		if (pPlayerSnap.modify_weapon())
+			WeaponModify(pPlayer);
+
 		if (pPlayerSnap.crouch())
 			pPlayer->crouch(0, 1.0f);
 		else
@@ -604,7 +629,7 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 
 }
 
-
+/* Client and server should be executing this */
 void T4Network::ProcessMessage()
 {
 	int clientLen;
@@ -713,7 +738,9 @@ void T4Network::Destroy()
 
 }
 
-/* This should only happen to clients! */
+/* 
+	This should only happen to clients, this is the processing of the large snapshot containing all player data.
+*/
 void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 {
 
@@ -1060,6 +1087,10 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 					if (player.weapon_slot() != pDMPlayer->Weapon_slot && !local_player)
 						SwitchWeapon(&pDMPlayer->pWeapon, (player.weapon_slot()) + 1);
 
+					if (player.modify_weapon())
+					{
+						WeaponModify(pDMPlayer);
+					}
 
 					/* Firing Checks  - important to do this AFTER position and other actions */
 					if (player.fire() && !player.fire_hold()) // try to fix the holding not working properly.
@@ -1118,10 +1149,10 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 			ConnectAck *Ack = ConnectAckPak.mutable_connect_ack();
 			Ack->set_index(check_player->index);
 
-			char * AckPak = new char[ConnectAckPak.ByteSize()];
-			ZeroMemory(AckPak, ConnectAckPak.ByteSize());
+			char * AckPak = new char[ConnectAckPak.ByteSizeLong()];
+			ZeroMemory(AckPak, ConnectAckPak.ByteSizeLong());
 
-			ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
+			ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSizeLong());
 	
 			sockaddr_in PlayerAddr;
 
@@ -1129,7 +1160,7 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 			PlayerAddr.sin_port = client_port;
 			PlayerAddr.sin_addr.s_addr = ip;
 
-			int sendlen = sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
+			int sendlen = sendto(serverSock, AckPak, ConnectAckPak.ByteSizeLong(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
 
 			if (sendlen == SOCKET_ERROR)
 				printf("WSAError on Send: %08X\r\n", WSAGetLastError());
@@ -1158,10 +1189,10 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 	ConnectAck *Ack = ConnectAckPak.mutable_connect_ack();
 	Ack->set_index(nPlayer->index);
 
-	char * AckPak = new char[ConnectAckPak.ByteSize()];
-	ZeroMemory(AckPak, ConnectAckPak.ByteSize());
+	char * AckPak = new char[ConnectAckPak.ByteSizeLong()];
+	ZeroMemory(AckPak, ConnectAckPak.ByteSizeLong());
 
-	ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSize());
+	ConnectAckPak.SerializeToArray(AckPak, ConnectAckPak.ByteSizeLong());
 
 	sockaddr_in PlayerAddr;
 
@@ -1169,7 +1200,7 @@ bool T4Network::AddPlayer(u_long ip, u_short client_port)
 	PlayerAddr.sin_port = client_port;
 	PlayerAddr.sin_addr.s_addr = ip;
 
-	sendto(serverSock, AckPak, ConnectAckPak.ByteSize(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
+	sendto(serverSock, AckPak, ConnectAckPak.ByteSizeLong(), 0, (SOCKADDR*)&PlayerAddr, sizeof(PlayerAddr));
 
 	nPlayer->PlayerObject = netEngine.SpawnPlayer();
 
