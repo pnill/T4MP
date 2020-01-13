@@ -634,9 +634,11 @@ __declspec(naked) void DamagePlayer()
 
 		PUSHAD
 		PUSHFD
-	
+		mov eax,[ecx]
+		cmp eax,0x656B98
+		jnz normal_ret
 	}
-
+	
 	/* 
 		If we're not the server we update the pointer of the damage to be 0 so that the client applies no damage.
 		This is a problem, because the damage function is also used to determine if an client should trigger events.
@@ -661,14 +663,15 @@ __declspec(naked) void DamagePlayer()
 
 	__asm
 	{
-		POPFD
-		POPAD
+		normal_ret:
+			POPFD
+			POPAD
 
-		or dword ptr[ecx+0x28],2
-		mov eax, 0x0051E570
-		jmp eax
-		push DamagePlayer_Ret
-		ret
+			or dword ptr[ecx + 0x28], 2
+			mov eax, 0x0051E570
+			jmp eax
+			push DamagePlayer_Ret
+			ret
 	}
 
 }
@@ -715,6 +718,7 @@ __declspec(naked) void KillPlayer()
 					player->death_type = death_type;
 			}
 		}
+
 	}
 
 		__asm
@@ -758,6 +762,9 @@ tIsDead pIsDead;
 BOOL __stdcall IsDead(DMPlayer* pDMPlayer)
 {
 	
+	if (*(DWORD*)pDMPlayer != 0x656B98)
+		return pIsDead(pDMPlayer);
+
 	if (t4net.server)
 		return pIsDead(pDMPlayer);
 	else
