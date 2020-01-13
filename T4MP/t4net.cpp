@@ -570,7 +570,7 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 		if (pPlayerSnap.jump())
 			pPlayer->jump(0, 1.0f);
 		
-		if (pPlayerSnap.fire())
+		if (pPlayerSnap.fire() && !pPlayerSnap.fire_hold()) // attempt to fix holding fire.
 		{
 			//printf("Player Fired\r\n");
 			pPlayer->fire_weapon(0, 0);
@@ -1039,7 +1039,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 					/* 
 						Weapon Switch  - Important to do this BEFORE firing as they could have changed weapons!, be sure to update weapon slot first so we switch appropriately
-						Should really find a better way to update the weapon being held this is too inacurate, there's a high chance for desync.
+						Should really find a better way to update the weapon being held this is too inaccurate, there's a high chance for desync.
 					*/
 
 					pDMPlayer->Weapon_switch_time = player.weapon_switch_time(); // how long to wait before performing the switch
@@ -1062,7 +1062,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 
 					/* Firing Checks  - important to do this AFTER position and other actions */
-					if (player.fire())
+					if (player.fire() && !player.fire_hold()) // try to fix the holding not working properly.
 					{
 						if(!local_player)
 							pDMPlayer->fire_weapon(0, 0); // again have no idea what the params are for, should determine if they need to be synced.

@@ -594,6 +594,16 @@ int __stdcall HoldFire(DMPlayer* pDMPlayer, float HeldTime, int a2)
 }
 
 
+/* Triggered when using alternate fire mode (right mouse click) */
+typedef int(__stdcall *tModifyWeapon)(DMPlayer* pDMPlayer);
+tModifyWeapon pModifyWeapon;
+
+int __stdcall ModifyWeapon(DMPlayer* pDMPlayer)
+{
+
+	return pModifyWeapon(pDMPlayer);
+}
+
 
 /*
 	These are engine functions used for switching weapons and checking if a weapon is available before attempting to switch to it.
@@ -1056,6 +1066,9 @@ void TurokEngine::SetModHooks()
 	VirtualProtect(pReleaseFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pHoldFire = (tHoldFire)DetourClassFunc((BYTE*)0x4D6DF0, (BYTE*)HoldFire, 11);
+
+	pModifyWeapon = (tModifyWeapon)DetourClassFunc((BYTE*)0x004C65C0, (BYTE*)ModifyWeapon, 12);
+	VirtualProtect(pModifyWeapon, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 	VirtualProtect(pHoldFire, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
