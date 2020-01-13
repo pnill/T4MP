@@ -878,15 +878,29 @@ int __stdcall PickupCrash8(void* pScreen, int a2)
 	return pPickupCrash8(pScreen, a2);
 }
 
-typedef void(__stdcall *tPickupText)(void* Unk, void* PlayerPTR);
+typedef void(__stdcall *tPickupText)(void* Unk, DMPlayer* pDMPlayer);
 tPickupText pPickupText;
 
-void __stdcall PickupText(void *Unk, void* PlayerPTR)
+void __stdcall PickupText(void *Unk, DMPlayer* pDMPlayer)
 {
+	DMPlayer* localplayer = tengine.GetDMPlayer(0);
+	if(localplayer != pDMPlayer)
+		return;
 
-	return pPickupText(Unk, PlayerPTR);
+	return pPickupText(Unk, pDMPlayer);
 }
 
+typedef void(__stdcall *tPickupFailText)(void* Unk, DMPlayer* pDMPlayer);
+tPickupFailText pPickupFailText;
+
+void __stdcall PickupFailText(void* Unk, DMPlayer* pDMPlayer)
+{
+	DMPlayer* localplayer = tengine.GetDMPlayer(0);
+	if (localplayer != pDMPlayer)
+		return;
+
+	return pPickupFailText(Unk, pDMPlayer);
+}
 
 DWORD WeapOrigBytes = 0;
 
@@ -969,6 +983,12 @@ void TurokEngine::SetModHooks()
 	*/
 	Codecave(0x0050E2E7, osd_health_fix, 4);
 	Codecave(0x0050E293, osd_health_fix2, 1);
+
+	pPickupText = (tPickupText)DetourClassFunc((BYTE*)0x00495A60, (BYTE*)PickupText, 13);
+	VirtualProtect(pPickupText, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+
+	pPickupFailText = (tPickupFailText)DetourClassFunc((BYTE*)0x00495C80, (BYTE*)PickupFailText, 13);
+	VirtualProtect(pPickupFailText, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pload_history = (tload_history)DetourClassFunc((BYTE*)0x529650, (BYTE*)load_history, 16);
 
