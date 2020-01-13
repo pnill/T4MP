@@ -171,8 +171,8 @@ void T4Network::SendSnapShot()
 
 		if (modify_weapon)
 		{
+			printf("Set host modify weapon in packet\r\n");
 			player_data->set_modify_weapon(true);
-			modify_weapon = false;
 		}
 
 		if (fire_set)
@@ -381,6 +381,9 @@ void T4Network::SendSnapShot()
 		fire_release = false;
 	}
 
+	modify_weapon = false;
+
+
 	for (NetworkPlayer* net_player : netplayers)
 	{
 
@@ -390,6 +393,8 @@ void T4Network::SendSnapShot()
 			net_player->fire_release = false;
 			net_player->fire_set = false;
 		}
+
+		net_player->modify_weapon = false;
 
 		/*sockaddr_in playerAddr;
 		playerAddr.sin_port = net_player->port; // This should already be in the correct order.
@@ -472,6 +477,7 @@ void T4Network::SendPlayerSnapShot()
 		if (modify_weapon)
 		{
 			player_snap->set_modify_weapon(true);
+			printf("Sent modify weapon in snap\r\n");
 		}
 
 		if (fire_set)
@@ -533,7 +539,7 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 	}
 
 
-	/* This should make sure playersnapshots are never read out of order, and that we don't get duplicates of the same data */
+	/* This should make sure player snapshots are never read out of order, and that we don't get duplicates of the same data */
 	if (pnet_player->last_packet_seq != 0 && pnet_player->last_packet_seq >= pPlayerSnap.packet_sequence())
 	{
 		return;
@@ -585,7 +591,11 @@ void T4Network::ProcessPlayerSnap(const PlayerSnap &pPlayerSnap,u_long pIP, u_sh
 			SwitchWeapon(&pPlayer->pWeapon, (pPlayerSnap.weapon_slot()) + 1);
 
 		if (pPlayerSnap.modify_weapon())
+		{
+			printf("Found modify weapon in playersnap\r\n");
 			WeaponModify(pPlayer);
+			pnet_player->modify_weapon = true;
+		}
 
 		if (pPlayerSnap.crouch())
 			pPlayer->crouch(0, 1.0f);
@@ -1089,6 +1099,7 @@ void T4Network::ProcessServerSnap(const ServerSnap &pSeverSnap)
 
 					if (player.modify_weapon())
 					{
+						printf("Got modify weapon in packet\r\n");
 						WeaponModify(pDMPlayer);
 					}
 

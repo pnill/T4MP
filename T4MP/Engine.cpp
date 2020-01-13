@@ -605,6 +605,7 @@ int __stdcall ModifyWeapon(DMPlayer* pDMPlayer,int a1, int a2)
 	if (pDMPlayer == tengine.GetDMPlayer(0))
 	{
 		t4net.modify_weapon = true;
+		printf("Modify Weapon set to true\r\n");
 	}
 
 
