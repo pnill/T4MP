@@ -81,14 +81,21 @@ __declspec(naked) void osd_health_fix()
 		add edi,4 // we noped this and moved it up
 		PUSHAD
 		PUSHFD
+		
 		check_osd:
-			mov eax, [edi]
-			cmp eax,0
+			mov eax, [ebp + 0x0EC]
+			cmp eax, edi // if edi has reached the end let the game handle it.
 			jz return_normal
-			mov eax, [eax]
-			cmp eax, 0x00658CE0
-			jz avoid_dmplayer
-			jmp return_normal
+
+			mov eax, [edi] 
+			cmp eax,0 // if eax is 0 return to function let game handle it.
+			jz return_normal
+			
+			
+			mov eax, [eax] // if the pointer is good grab the data
+			cmp eax, 0x00658CE0 // compare it against our known 'bad'
+			jz avoid_dmplayer // avoid this player's data if the compare matches
+			jmp return_normal // otherwise return to normal game operation
 
 	
 			/*
@@ -99,12 +106,12 @@ __declspec(naked) void osd_health_fix()
 			*/
 
 		return_normal:
-		POPFD
-		POPAD
+			POPFD
+			POPAD
 
-		mov eax,[ebp + 0x0EC]
-		push osd_health_fix_ret
-		ret
+			mov eax, [ebp + 0x0EC]
+			push osd_health_fix_ret
+			ret
 	
 		avoid_dmplayer:
 			add edi,4
@@ -869,6 +876,15 @@ int __stdcall PickupCrash8(void* pScreen, int a2)
 		return a2;
 
 	return pPickupCrash8(pScreen, a2);
+}
+
+typedef void(__stdcall *tPickupText)(void* Unk, void* PlayerPTR);
+tPickupText pPickupText;
+
+void __stdcall PickupText(void *Unk, void* PlayerPTR)
+{
+
+	return pPickupText(Unk, PlayerPTR);
 }
 
 
