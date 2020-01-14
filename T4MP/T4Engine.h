@@ -245,7 +245,7 @@ public:
 	virtual void Function138(); //
 	virtual void Function139(); //
 	virtual void modify_weapon(int a1, int a2); //
-	virtual void Function141(); //
+	virtual void modify_weapon2(int a1, int a2); //
 	virtual void Function142(); //
 	virtual void Function143(); //
 	virtual void Function144(); //
@@ -395,7 +395,7 @@ public:
 	__int8 N0000040F; //0x0024 
 	__int8 N00000543; //0x0025 
 	__int8 N00000546; //0x0026 
-	__int8 N00000544; //0x0027 
+	__int8 N00000544; //0x0027 1
 	char pad_0x0028[0x10]; //0x0028
 	Vector3 POS; //0x0038 
 	char pad_0x0044[0x18]; //0x0044

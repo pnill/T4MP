@@ -52,7 +52,7 @@ __declspec(naked) void osd_health_fix2()
 		.text:0050E299                 cmp     edi, [ebp+0ECh]
 		.text:0050E29F                 jz      short loc_50E2F5
 		*/
-		mov edi,[ebp+0xE8]
+			mov edi,[ebp+0xE8]
 		check_osd:
 			mov ecx,[edi] // we can use ecx and not have to restore it because the operation just after this overwrites it
 			mov ecx,[ecx]
@@ -239,7 +239,7 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 typedef void(__stdcall *tcamera_hook3)(void* thisptr, BlendedCamera* pCamera);
 tcamera_hook3 pcamera_hook3;
 
-void __stdcall camera_hook3(void* thisptr, BlendedCamera* pCamera) // third camera fix, this one should take care of additional hud bullshit.
+void __stdcall camera_hook3(void* thisptr, BlendedCamera* pCamera) 
 {
 	T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 	BlendedCamera* local_player = 0;
@@ -262,7 +262,7 @@ tdeath_message_hook pdeath_message_hook;
 
 int __stdcall death_message(void *thisptr)
 {
-	DMPlayer* localplayer = tengine.GetDMPlayer(0); // Simplify.
+	DMPlayer* localplayer = tengine.GetDMPlayer(0);
 
 	if (localplayer != 0)
 	{
@@ -605,9 +605,13 @@ int __stdcall ModifyWeapon(DMPlayer* pDMPlayer,int a1, int a2)
 	if (pDMPlayer == tengine.GetDMPlayer(0))
 	{
 		t4net.modify_weapon = true;
-		printf("Modify Weapon set to true\r\n");
 	}
 
+	printf("ModifyWeapon(a1: %i, a2: %i)\r\n", a1, a2);
+
+	/*
+		We'll call the function directly when getting a packet from the server, this way we're always in sync with what the server sees
+	*/
 
 	if (!t4net.server)
 		return 0;
@@ -615,14 +619,18 @@ int __stdcall ModifyWeapon(DMPlayer* pDMPlayer,int a1, int a2)
 	return pModifyWeapon(pDMPlayer,a1,a2);
 }
 
+// This is to avoid hitting the hook when manipulating the modifier internally
 int WeaponModify(DMPlayer* pDMPlayer)
 {
 	TurokEngine tengine;
 
 	if (pDMPlayer == tengine.GetDMPlayer(0))
 		t4net.modify_weapon = false;
+	
+	int result = pModifyWeapon(pDMPlayer, 0, 0);
+	pDMPlayer->modify_weapon2(0, 0);
 
-	return pModifyWeapon(pDMPlayer, 0, 0);
+	return result;
 }
 
 /*
@@ -1015,7 +1023,7 @@ void TurokEngine::SetModHooks()
 	DWORD dwBack;
 
 	/*
-		There's an OSD loop where text gets rendered for all cameras these two codecaves take care of that loop,
+		There's an OSD loop where text gets rendered for all cameras these two code caves take care of that loop,
 		It was possible to determine a specific object type that the additionally spawned players were using and stop the game from rendering data for them.
 	*/
 	Codecave(0x0050E2E7, osd_health_fix, 4);

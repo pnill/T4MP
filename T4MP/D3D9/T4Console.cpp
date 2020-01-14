@@ -329,6 +329,7 @@ void ConsoleCommands::handle_command(std::string command) {
 		void*  ptr2 = 0;
 		void*  ptr3 = 0;
 		void*  ptr4 = 0;
+		void*  ptr5 = 0;
 		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 		if (TurokEngine->pT4Game)
 			if (TurokEngine->pT4Game->pEngineObjects)
@@ -339,6 +340,7 @@ void ConsoleCommands::handle_command(std::string command) {
 					ptr2 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor;
 					ptr3 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
 					ptr4 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer->pHealth;
+					ptr5 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer;
 				}
 			}
 
@@ -356,10 +358,14 @@ void ConsoleCommands::handle_command(std::string command) {
 		std::stringstream otptr4;
 		otptr4 << "pHealth: " << std::hex << ptr4;
 
+		std::stringstream otptr5;
+		otptr5 << "pPlayer: " << std::hex << ptr5;
+
 		this->writePreviousOutput(otptr1.str());
 		this->writePreviousOutput(otptr2.str());
 		this->writePreviousOutput(otptr3.str());
 		this->writePreviousOutput(otptr4.str());
+		this->writePreviousOutput(otptr5.str());
 
 
 	}
@@ -425,6 +431,15 @@ void ConsoleCommands::handle_command(std::string command) {
 		SwitchWeapon(&p->pWeapon, p->pWeaponWheel->SpikeGrenadeID);
 
 	}
+
+	if (command == "modify_my_weapon")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(0);
+		p->modify_weapon(0, 0);
+		p->modify_weapon2(0, 0);
+	}
+
 
 	if (command == "modify_weapon")
 	{
