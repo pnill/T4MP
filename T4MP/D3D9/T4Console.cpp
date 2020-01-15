@@ -49,8 +49,13 @@ BOOL ConsoleCommands::handleInput(WPARAM wp) {
 		//if (seconds_since_start > 0.1) {
 			console = !console;
 
-			if(console == false)
+			if (console == false)
+			{
+				DWORD dwBack;
+
+				VirtualProtect((PVOID)0x004D0466, 1, PAGE_EXECUTE_READWRITE, &dwBack);
 				*(BYTE*)(0x004D0466) = 0x74; // enable game input
+			}
 		//	start = time(0);
 		//}
 		return false;
@@ -330,6 +335,10 @@ void ConsoleCommands::handle_command(std::string command) {
 		void*  ptr3 = 0;
 		void*  ptr4 = 0;
 		void*  ptr5 = 0;
+		void*  ptr6 = 0;
+		void*  ptr7 = 0;
+		void*  ptr8 = 0;
+
 		T4Engine * TurokEngine = (T4Engine*)0x6B52E4;
 		if (TurokEngine->pT4Game)
 			if (TurokEngine->pT4Game->pEngineObjects)
@@ -341,6 +350,11 @@ void ConsoleCommands::handle_command(std::string command) {
 					ptr3 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer;
 					ptr4 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer->pHealth;
 					ptr5 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pPlayer;
+					ptr6 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer->pBlendedCamera;
+					ptr7 = &TurokEngine->pT4Game->pEngineObjects->pCameraArray[0]->pActor->pDMPlayer->pBlendedCamera->enabled;
+
+					if (TurokEngine->pT4Game->pEngineObjects->pCameraArray[1])
+						ptr8 = TurokEngine->pT4Game->pEngineObjects->pCameraArray[1]->pActor->pDMPlayer;
 				}
 			}
 
@@ -361,12 +375,24 @@ void ConsoleCommands::handle_command(std::string command) {
 		std::stringstream otptr5;
 		otptr5 << "pPlayer: " << std::hex << ptr5;
 
+		std::stringstream otptr6;
+		otptr6 << "dmPlayer(BlendedCamera): " << std::hex << ptr6;
+
+		std::stringstream otptr7;
+		otptr7 << "BlendedCamera enable ptr: " << std::hex << ptr7;
+
+		std::stringstream otptr8;
+		otptr8 << "pDMPlayer[1]: " << std::hex << ptr8;
+
+
 		this->writePreviousOutput(otptr1.str());
 		this->writePreviousOutput(otptr2.str());
 		this->writePreviousOutput(otptr3.str());
 		this->writePreviousOutput(otptr4.str());
 		this->writePreviousOutput(otptr5.str());
-
+		this->writePreviousOutput(otptr6.str());
+		this->writePreviousOutput(otptr7.str());
+		this->writePreviousOutput(otptr8.str());
 
 	}
 
@@ -440,6 +466,34 @@ void ConsoleCommands::handle_command(std::string command) {
 		p->modify_weapon2(0, 0);
 	}
 
+	if (command == "disable_my_camera")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(0);
+		p->pBlendedCamera->enabled = false;
+	}
+
+	if (command == "enable_my_camera")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(0);
+		p->pBlendedCamera->enabled = true;
+	}
+
+	if (command == "disable_camera")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+
+		p->pBlendedCamera->enabled = false;
+	}
+
+	if (command == "enable_camera")
+	{
+		TurokEngine tengine;
+		DMPlayer *p = tengine.GetDMPlayer(1);
+		p->pBlendedCamera->enabled = true;
+	}
 
 	if (command == "modify_weapon")
 	{

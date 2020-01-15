@@ -72,7 +72,9 @@ public:
 	virtual void Function8(); //
 	virtual void Function9(); //
 
-	char pad_0x0004[0x58]; //0x0004
+	char pad_0x0004[0x1A]; //0x0004
+	bool enabled; // 0x1E
+	char pad_0x001F[0x3D];
 	char* ObjectName; //0x005C 
 	char pad_0x0060[0x58C]; //0x0060
 	Player* pPlayer; //0x05EC 
@@ -383,7 +385,8 @@ public:
 	virtual void KillPlayer(int Unk1, int DeathType, void* DamagePtr); //
 	virtual void Function277(); //
 
-	char pad_0x0004[0x18]; //0x0004
+	char pad_0x0004[0x14]; //0x0004
+	BlendedCamera* pBlendedCamera;
 	__int8 N0000040D; //0x001C 
 	__int8 N00000535; //0x001D 
 	__int8 bEnabled; //0x001E 

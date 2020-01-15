@@ -177,20 +177,38 @@ __declspec(naked) void CameraFuncLoop2() // make sure we only ever render the fi
 
 }
 
+/*
+	Additional research needs to be performed in this loop in order to determine exactly what's being used here,
+	The current patches seem to break other things including the pause menu.
+*/
+BlendedCamera *lCamera = 0;
+
 __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st player's stuff.
 {
-
 	__asm
 	{
 		pop CameraLoop1_Ret
 
+		mov edi, [ebp - 4]
+
 		PUSHAD
 		PUSHFD
+
+		mov eax, [edi]
+		cmp eax, 0x658200 // check if it's a blended camera
+		jnz  end // if it's not a blended camera let it go
+	}
+	
+		lCamera = tengine.GetDMPlayer(0)->pBlendedCamera;
+
+	__asm 
+	{
+		cmp lCamera,edi
+		jz end // It's the local players camera, and it's a blended camera so we can continue
 		
-		cmp nPlayerPTR,0
+		/*cmp nPlayerPTR,0
 		jz end
 
-		mov edi, [ebp - 4]
 
 
 		mov eax, 0x006B52E4
@@ -209,6 +227,7 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 
 		cmp ebx,edi // if the pointer of what we're trying to render matches the pointer of our first player continue.
 		jz end
+		*/
 
 		POPFD
 		POPAD
@@ -217,10 +236,8 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 		ret
 
 	end:
-		mov lPlayer, ebx // store local player for future use.
 		POPFD
 		POPAD
-		mov edi,[ebp-4] // restore overwritten code.
 		cmp [edi+0x1E],bl
 		push CameraLoop1_Ret
 		ret
@@ -949,6 +966,33 @@ void __stdcall PickupFailText(void* Unk, DMPlayer* pDMPlayer)
 
 DWORD WeapOrigBytes = 0;
 
+/* 
+	Turns out most efficient way to fix FPS bug is hook the function right before our patch, 
+	revert to normal execute function and revert back to patch.
+
+	Additional notes:
+	This requires one of the original camera codecaves to be re-enabled as it blends their camera with ours.
+*/
+typedef int(__stdcall *tFPSWeaponFix)(void* thisptr);
+tFPSWeaponFix pFPSWeaponFix;
+
+int __stdcall FPSWeaponFix(void* thisptr)
+{
+	if (WeapOrigBytes != 0)
+	{
+		memcpy((PVOID)0x00510AF9, &WeapOrigBytes, 4); // revert to original code while spawning FPS weapon
+
+		int result = pFPSWeaponFix(thisptr);
+
+		memset((PVOID)0x00510AF9, 0x90, 4); // restore patch for rest of spawn process.
+
+		return result;
+	}
+
+	return pFPSWeaponFix(thisptr);
+}
+
+
 /* Internal function actually responsible for spawning additional players into the game. */
 DMPlayer* TurokEngine::SpawnPlayer()
 {
@@ -981,12 +1025,12 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x0050CED2, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x00510AF9, 4, PAGE_EXECUTE_READWRITE, &dwOld);
-
+	VirtualProtect((BYTE*)0x004FED7F, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
-	DWORD OrigBytes = *(DWORD*)0x0050CED2; // Camera/screen effect array increment pointer
-	DWORD WeapOrigBytes = *(DWORD*)0x00510AF9; // Camera Loop 1, this should fix without a cave.
-
+	DWORD OrigBytes = *(DWORD*)0x0050CED2;
+	WeapOrigBytes = *(DWORD*)0x00510AF9; 
+	DWORD TestBytes = *(DWORD*)0x004FED7F;
 	*(BYTE*)0x004DAD49 = 0xEB; // disable OSD weapon related
 
 	/* 
@@ -1002,17 +1046,25 @@ DMPlayer* TurokEngine::SpawnPlayer()
 		.text:004D4E61 jz     short loc_4D4E74 // EB(jmp) on spawn new player
 
 	 */
-
+	/*
+		.text:00510AF9                 add     dword ptr [esi+4], 4 -> nop
+	*/
 	memset((PVOID)0x00510AF9, 0x90, 4); // Causes FPS Weapon bug - 0x004D4E27
 	
-	
+	/*
+		actor_spawn_unk_3  - part of actor spawn process, increments by 4 patching has no or unknown impact.
+		.text:004FED7F                 add     eax, 4
+	*/
+	memset((PVOID)0x004FED7F, 0x90, 3);
+
+
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
 
 	*(BYTE*)0x004DAD49 = OrigByte;
 	
-	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); // Restore the bytes for the camera array addition.
-	memcpy((PVOID)0x00510AF9, &WeapOrigBytes, 4); // Restore original Bytes.
-
+	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); 
+	memcpy((PVOID)0x00510AF9, &WeapOrigBytes, 4);  // .text:00510AF9 add dword ptr [esi+4], 4
+	memcpy((PVOID)0x004FED7F, &TestBytes, 4);
 	return nPlayer;
 }
 
@@ -1028,6 +1080,10 @@ void TurokEngine::SetModHooks()
 	*/
 	Codecave(0x0050E2E7, osd_health_fix, 4);
 	Codecave(0x0050E293, osd_health_fix2, 1);
+
+
+	pFPSWeaponFix = (tFPSWeaponFix)DetourClassFunc((BYTE*)0x004D4D40, (BYTE*)FPSWeaponFix, 13);
+	VirtualProtect(pFPSWeaponFix, 4, PAGE_EXECUTE_READWRITE,&dwBack);
 
 	pPickupText = (tPickupText)DetourClassFunc((BYTE*)0x00495A60, (BYTE*)PickupText, 13);
 	VirtualProtect(pPickupText, 4, PAGE_EXECUTE_READWRITE, &dwBack);
@@ -1137,8 +1193,9 @@ void TurokEngine::SetModHooks()
 	VirtualProtect(pPickupCrash8, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 	
 
-	/* Because I was able to remove the player from the array of cameras/render loop this should no longer be needed. */
-	//Codecave(0x0050F850, CameraFuncLoop1, 1);
+	/* CameraFuncLoop1 is required in conjunction with other patches to get rid of the first person weapon spawning for the other player. */
+	Codecave(0x0050F850, CameraFuncLoop1, 1);
+
 	//Codecave(0x0050F8F0, CameraFuncLoop2, 1);
 
 
