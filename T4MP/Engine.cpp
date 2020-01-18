@@ -122,41 +122,29 @@ __declspec(naked) void osd_health_fix()
 }
 
 
-/* Currently this is not in-use */
-DWORD nPlayerPTR = 0x00000000;
-DWORD lPlayer = 0x00000000;
 DWORD CameraLoop1_Ret = 0;
 DWORD CameraLoop2_Ret = 0;
+BlendedCamera* lCamera2 = 0;
 
 __declspec(naked) void CameraFuncLoop2() // make sure we only ever render the first player's stuff.
 { // see camera1 loop for comments on flow.
 	__asm {
 		pop CameraLoop2_Ret
 
+		mov edi, [ebp - 4]
+
 		PUSHAD
 		PUSHFD
 
-		cmp nPlayerPTR, 0
-		jz end
+		mov eax, [edi]
+		cmp eax, 0x658200 // check if it's a blended camera (making the assumption we're still dealing with blended camera)
+		jnz  end // if it's not a blended camera let it go
+	}
 
-		mov edi, [ebp - 4]
-
-
-		mov eax, 0x006B52E4
-		mov eax, [eax]
-		cmp eax, 0
-		jz end
-
-		add eax, 0xC0
-		mov edx, [eax]
-		cmp edx, 0
-		jz end
-
-		mov ebx, [edx]
-		cmp ebx, 0
-		jz end
-
-		cmp ebx, edi
+		lCamera2 = tengine.GetDMPlayer(0)->pBlendedCamera; // Wondering how this will work when local player is dead considering DMPlayer isn't populated.
+	__asm 
+	{
+		cmp lCamera2, edi
 		jz end
 
 		POPFD
@@ -165,7 +153,6 @@ __declspec(naked) void CameraFuncLoop2() // make sure we only ever render the fi
 		ret
 
 		end:
-			mov lPlayer, ebx
 			POPFD
 			POPAD
 			mov edi, [ebp - 4]
@@ -199,39 +186,16 @@ __declspec(naked) void CameraFuncLoop1() // make sure we only render the 1st pla
 		jnz  end // if it's not a blended camera let it go
 	}
 	
-		lCamera = tengine.GetDMPlayer(0)->pBlendedCamera;
+		lCamera = tengine.GetDMPlayer(0)->pBlendedCamera; // Wondering how this will work when local player is dead considering DMPlayer isn't populated.
 
 	__asm 
 	{
 		cmp lCamera,edi
 		jz end // It's the local players camera, and it's a blended camera so we can continue
-		
-		/*cmp nPlayerPTR,0
-		jz end
-
-
-
-		mov eax, 0x006B52E4
-		mov eax,[eax]
-		cmp eax, 0
-		jz end
-	
-		add eax, 0xC0
-		mov edx, [eax]
-		cmp edx,0
-		jz end
-		
-		mov ebx,[edx] 
-		cmp ebx,0
-		jz end
-
-		cmp ebx,edi // if the pointer of what we're trying to render matches the pointer of our first player continue.
-		jz end
-		*/
 
 		POPFD
 		POPAD
-		//mov [edi+0x1E],1
+
 		push 0x0050F87E // else push a different return value to the stack and force the loop onto the next entry.
 		ret
 
@@ -357,12 +321,6 @@ int __stdcall construct_actor(void* thisptr, char* object_name, char* object_pat
 
 	int ret = pconstruct_actor(thisptr, object_name, object_path);
 
-	if (!strcmp(object_name, "DMPlayer"))
-	{
-		nPlayerPTR = (DWORD)ret;
-	}
-
-
 	/*
 		So we know that a player is being spawned when the "Weapon" is called", and t4net.connected will stop us from running this multiple times.
 
@@ -431,15 +389,39 @@ void __stdcall player_death2(void* thisptr, int a2)
 	return; // this will disable the indicator for the death helm, but trying to return normally crashes so we'll accept it for now.
 }
 
+
+
+// Checks if things are supposed to be invisible
 typedef char(__stdcall *tplayer_death3)(void* thisptr, int a2);
 tplayer_death3 pplayer_death3;
 
 char __stdcall player_death3(void* thisptr, int a2)
 {
+
 	if (thisptr == 0)
 		return 0;
 
-	return pplayer_death3(thisptr, a2);
+	char* type = *(char**)((BYTE*)thisptr + 0x5C);
+	
+
+	/* 
+		Have to see what kind of impact this has on overall performance,
+		This makes it so the other player's first person weapon is invisible fixing the bug where you see it.
+	*/
+	if (strcmp("Weapon", type))
+		return pplayer_death3(thisptr, a2);
+	else
+	{
+		DWORD owner = *(DWORD*)((BYTE*)thisptr + 0x234);
+		if (owner != (DWORD)tengine.GetDMPlayer(0)->pBlendedCamera->pPlayer)
+		{
+			return pplayer_death3(thisptr, 0);
+			printf("Weapon - thisptr: %08X\r\n owner: %08X\r\n", thisptr, owner);
+		}
+
+		return pplayer_death3(thisptr, 1);
+	}
+
 }
 
 typedef void(__stdcall *tplayer_death4)(void* thisptr, float a2);
@@ -1003,6 +985,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	ZeroMemory(spawn_path, 255);
 
 	sprintf_s(spawn_path, strlen("$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr") + 1, "%s", "$/Data/Actors/multiplayer\\Players\\TalSetPlayer\\TalSetPlayer.atr");
+	
 	char *spawn_name = new char[20];
 	ZeroMemory(spawn_name, 20);
 
@@ -1025,12 +1008,12 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	VirtualProtect((BYTE*)0x004DAD49, 1, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x0050CED2, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 	VirtualProtect((BYTE*)0x00510AF9, 4, PAGE_EXECUTE_READWRITE, &dwOld);
-	VirtualProtect((BYTE*)0x004FED7F, 4, PAGE_EXECUTE_READWRITE, &dwOld);
+	//VirtualProtect((BYTE*)0x004FED7F, 4, PAGE_EXECUTE_READWRITE, &dwOld);
 
 	BYTE OrigByte = *(BYTE*)0x004DAD49;
 	DWORD OrigBytes = *(DWORD*)0x0050CED2;
 	WeapOrigBytes = *(DWORD*)0x00510AF9; 
-	DWORD TestBytes = *(DWORD*)0x004FED7F;
+	//DWORD TestBytes = *(DWORD*)0x004FED7F;
 	*(BYTE*)0x004DAD49 = 0xEB; // disable OSD weapon related
 
 	/* 
@@ -1055,7 +1038,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 		actor_spawn_unk_3  - part of actor spawn process, increments by 4 patching has no or unknown impact.
 		.text:004FED7F                 add     eax, 4
 	*/
-	memset((PVOID)0x004FED7F, 0x90, 3);
+	//memset((PVOID)0x004FED7F, 0x90, 3);
 
 
 	DMPlayer *nPlayer = (DMPlayer*)pspawn_object(TurokEngine->pT4Game, 0, spawn_name, spawn_path, &npos_struct, 0);
@@ -1064,7 +1047,7 @@ DMPlayer* TurokEngine::SpawnPlayer()
 	
 	memcpy((PVOID)0x0050CED2, &OrigBytes, 4); 
 	memcpy((PVOID)0x00510AF9, &WeapOrigBytes, 4);  // .text:00510AF9 add dword ptr [esi+4], 4
-	memcpy((PVOID)0x004FED7F, &TestBytes, 4);
+	//memcpy((PVOID)0x004FED7F, &TestBytes, 4);
 	return nPlayer;
 }
 
@@ -1082,8 +1065,9 @@ void TurokEngine::SetModHooks()
 	Codecave(0x0050E293, osd_health_fix2, 1);
 
 
-	pFPSWeaponFix = (tFPSWeaponFix)DetourClassFunc((BYTE*)0x004D4D40, (BYTE*)FPSWeaponFix, 13);
-	VirtualProtect(pFPSWeaponFix, 4, PAGE_EXECUTE_READWRITE,&dwBack);
+	/* This brings back other issues, */
+	//pFPSWeaponFix = (tFPSWeaponFix)DetourClassFunc((BYTE*)0x004D4D40, (BYTE*)FPSWeaponFix, 13);
+	//VirtualProtect(pFPSWeaponFix, 4, PAGE_EXECUTE_READWRITE,&dwBack);
 
 	pPickupText = (tPickupText)DetourClassFunc((BYTE*)0x00495A60, (BYTE*)PickupText, 13);
 	VirtualProtect(pPickupText, 4, PAGE_EXECUTE_READWRITE, &dwBack);
@@ -1194,9 +1178,8 @@ void TurokEngine::SetModHooks()
 	
 
 	/* CameraFuncLoop1 is required in conjunction with other patches to get rid of the first person weapon spawning for the other player. */
-	Codecave(0x0050F850, CameraFuncLoop1, 1);
-
-	//Codecave(0x0050F8F0, CameraFuncLoop2, 1);
+	//Codecave(0x0050F850, CameraFuncLoop1, 1);
+	//Codecave(0x0050F8F0, CameraFuncLoop2, 1); // causes loss of particle effects but fixes water screen effects currently
 
 
 	Codecave(0x004EE7F0, screen_effect_osd, 1);
