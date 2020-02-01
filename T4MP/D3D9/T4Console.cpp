@@ -1,7 +1,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <vector>
+#include <set>
+#include <algorithm> 
 #include <windows.h>
 #include "T4Console.h"
 #include "../Engine.h"
@@ -9,6 +10,7 @@
 #include <time.h>
 
 extern HWND CurWindow;
+extern std::set<DWORD> wep_pointers;
 
 ConsoleCommands::ConsoleCommands() {
 	command = "";

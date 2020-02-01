@@ -4,6 +4,7 @@
 #include "t4net.h"
 #include <windows.h>
 #include <stdio.h>
+#include "D3D9\T4Console.h"
 
 T4Network t4net;
 TurokEngine tengine;
@@ -389,37 +390,35 @@ void __stdcall player_death2(void* thisptr, int a2)
 	return; // this will disable the indicator for the death helm, but trying to return normally crashes so we'll accept it for now.
 }
 
+typedef char(__stdcall *tIsInvisible)(void* thisptr, int a2);
+tIsInvisible pIsInvisible;
 
 
-// Checks if things are supposed to be invisible
-typedef char(__stdcall *tplayer_death3)(void* thisptr, int a2);
-tplayer_death3 pplayer_death3;
-
-char __stdcall player_death3(void* thisptr, int a2)
+char __stdcall IsInvisible(void* thisptr, int a2)
 {
 
 	if (thisptr == 0)
 		return 0;
 
 	char* type = *(char**)((BYTE*)thisptr + 0x5C);
-	
 
-	/* 
-		Have to see what kind of impact this has on overall performance,
-		This makes it so the other player's first person weapon is invisible fixing the bug where you see it.
-	*/
-	if (strcmp("Weapon", type))
-		return pplayer_death3(thisptr, a2);
+
+	if(*type != 0x57) // We only compare the first character of the string vs comparing whole string.
+	//if (strcmp("Weapon", type))
+	{
+	
+		return pIsInvisible(thisptr, a2);
+	}
 	else
 	{
 		DWORD owner = *(DWORD*)((BYTE*)thisptr + 0x234);
 		if (owner != (DWORD)tengine.GetDMPlayer(0)->pBlendedCamera->pPlayer)
 		{
-			return pplayer_death3(thisptr, 0);
+			return pIsInvisible(thisptr, 0);
 			printf("Weapon - thisptr: %08X\r\n owner: %08X\r\n", thisptr, owner);
 		}
 
-		return pplayer_death3(thisptr, 1);
+		return pIsInvisible(thisptr, 1);
 	}
 
 }
@@ -1112,9 +1111,9 @@ void TurokEngine::SetModHooks()
 
 	VirtualProtect(pdeath_message_hook, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
-	pplayer_death3 = (tplayer_death3)DetourClassFunc((BYTE*)0x51E3B0, (BYTE*)player_death3, 9);
+	pIsInvisible = (tIsInvisible)DetourClassFunc((BYTE*)0x51E3B0, (BYTE*)IsInvisible, 9);
 
-	VirtualProtect(pplayer_death3, 4, PAGE_EXECUTE_READWRITE, &dwBack);
+	VirtualProtect(pIsInvisible, 4, PAGE_EXECUTE_READWRITE, &dwBack);
 
 	pplayer_death4 = (tplayer_death4)DetourClassFunc((BYTE*)0x4D9130, (BYTE*)player_death4, 13);
 
